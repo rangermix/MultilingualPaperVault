@@ -1,0 +1,276 @@
+# Current workflows
+
+## From PDF to publication
+
+Upload inspection verifies the PDF before library import. Parsing freezes the
+selected profile, accelerator and timeout. Newly saved preferences use
+Surya OCR 2 through DMR. Older explicit preferences and queued jobs are preserved;
+retired/native choices must be replaced explicitly for new work.
+
+Source extraction is followed by page coverage checks and bounded recovery using
+the original PDF. Missing regions that cannot be safely recovered remain visible
+as source text or page images. Recovery tasks expose before/after comparisons.
+Source-only results provide an explicit continuation action; translation uses the
+saved source rather than implying parsing already produced a translation.
+
+New parses use source format 4.0. Printed hierarchy, nested lists, rich table cells,
+header relationships, explicit math/code, marks and safe links are decoded before
+native recovery. Inline math and code remain protected literals; static form states
+remain readable without becoming active inputs. Captions and notes use explicit
+nested ownership or a unique typed same-page association. Ambiguous relationships
+remain independent with a warning. Nested content records its inherited outer
+rectangle when precise child coordinates are absent.
+
+Exact page responses, completion state and decoder diagnostics are saved before
+interpretation, then promoted with verified hashes under the parser task/fence.
+Truncated or malformed output preserves complete independent siblings and the
+original page. Unknown roles and generated figure/chemical descriptions remain
+bounded, labeled auxiliary evidence. Capacity limits are explicit; they do not
+turn incomplete output into a complete-page claim.
+
+Native page/column edges can join a continuing sentence across a floating figure
+or footnote when the original glyphs support both ends. Complete sentences and
+intervening headings remain separate. Same-baseline equation numbers and nearby
+subfigure labels stay with their equations/figures. These repairs retain the PDF
+locators and before/after audit; they affect new source revisions only.
+Native margin evidence excludes folios and arXiv stamps. Sequential numbered
+items with hanging indents form lists, and native table rows distinguish actual
+line breaks from literal code escapes. A narrowly matched native paragraph can
+also correct one misrecognized word; conflicting evidence stays visible.
+Native evidence also repairs unambiguous same-column ordering and split
+references. Reference numbers and author characters are corrected only when
+complete native lines and the unchanged citation body identify the same entry.
+Merged bibliography areas are split at verified printed entry markers, enabling
+grouped citations such as `[1, 12, 21]` to link to each original entry. Run-in
+headings and list boundaries are repaired only when the PDF supports the join or
+split. Numeric labels such as `(1)` keep their parentheses during translation.
+Plain code retains PDF-supported lines and spacing and is never translated.
+Annotated code diagrams or code whose transcription conflicts with the PDF use
+the corresponding original crop; their labels are not duplicated as body prose.
+An unknown native glyph can be reconciled only when its embedded font encoding
+and an independent extraction agree at the same position; genuine question marks
+and ambiguous mappings stay unchanged.
+
+Translation requires a complete saved profile, content/destination confirmation,
+enabled dispatch and a budget when cost control is enabled. Confirmations bind the
+source, profile revision/hash and current generation. A task records the selected
+public profile and credential revision at creation; later changes to the saved
+translation interface affect new tasks, while queued translation and preparation
+requests use that task's original revision. A new task using changed settings
+requires a new confirmation. Global dispatch controls and budget checks still apply.
+Waiting for model/configuration startup is represented separately from an unknown
+provider outcome.
+
+On the upload page, choosing **解析并翻译** and clicking **上传并开始处理**
+authorizes necessary text, context and terminology from that batch to be sent to
+the displayed saved service, including possible charges. The request binds this
+authorization to the current public profile hash; a changed profile requires a
+new submission. Choosing **仅解析阅读** does not authorize translation. There are
+no separate upload consent or remembered-permission switches, including in
+Settings. Dispatch controls and per-document budgets continue to apply.
+
+New operations started through the UI publish their reading result automatically
+when processing completes. The UI no longer offers delayed publication. Existing
+API values, saved preferences and queued tasks remain compatible; historical
+`manual_approval` choices and queued task snapshots are not rewritten.
+
+All translation entry points offer **翻译前准备**. The default collects exact source
+excerpts, headings, definitions and term candidates without another model call.
+**当前 API 模型** adds one bounded summary/wording request to that saved provider.
+**独立本地小模型** uses the analyst saved under **设置 → 翻译前总结模型** through
+Docker Model Runner, then continues with the selected API or local translator.
+Choose its model family, quantization, format and inference backend independently
+of the translator. The pinned MiniCPM5-1B catalogue offers GGUF Q4_K_M/llama.cpp
+and MLX Q4 where the deployment supports them. The translation dialog shows the
+saved choice and links back to settings. Saving does not download or invoke a model;
+explicit preparation or first use downloads the pinned weights. Each new task
+freezes the selected analyst, so subsequent settings changes do not alter it.
+**不做论文级准备** retains the legacy flow.
+
+Explicit glossary entries take precedence over generated preferred wording.
+Outside upload, changing the preparation mode resets the form's content confirmation.
+Local analysis followed by API translation still sends the selected context with translation requests
+to the confirmed API destination. Preflight shows the extra analysis request separately;
+repeating context in translation requests also consumes input and time.
+
+The editor's preparation views distinguish the draft baseline, the selected
+paragraph and each candidate. They show source excerpts, summary suggestions, term
+scope and unreviewed wording. Paragraphs inherited during continuation retain their
+own provenance. New candidate preparation never relabels untouched paragraphs.
+Warnings, ambiguous terms and absent suggestions do not require human approval.
+Unknown request outcomes still stop automatic redispatch; settled unusable analysis
+falls back to extraction with a visible warning.
+
+Content checks produce hints and comparison evidence. They do not require manual
+approval to seal, publish or export. Invalid executable content is rejected or
+safely represented before rendering; nonblocking quality does not relax file,
+version or secret boundaries. Successfully sealed revisions are immutable.
+
+Source 4.0 translation splits at formatting/link boundaries and restores those
+associations deterministically after the bounded text response. Editing visible
+labels preserves marks, destinations and protected references. `reader-v18`
+renders nested structures, table headers and bare math literals. Author and
+affiliation lines stay in their original form beside the titles. References and
+footnotes appear in the margin, with clickable destinations and a collected
+footnote section at the bottom;
+publication and both offline exports retain these semantics. Old snapshots and
+reader resources are not rewritten. New publications and draft exports use
+`reader-v18` for both 3.0 and 4.0 sources. Its theme selector offers system (the
+default), light and dark modes. System mode responds immediately to the browser's
+system color preference, including in offline exports and without JavaScript.
+Explicit light/dark preferences already saved in the browser remain selected;
+choosing system restores automatic switching. Printing always uses light colors.
+Default body text uses bundled Source Han Sans CN (思源黑体). Characters outside
+the Simplified Chinese regional subset use local and system fallback fonts.
+Code blocks and inline code use bundled JetBrains Mono.
+The separate code-font selector also offers Fira Code, Cascadia Code, Source Code
+Pro, IBM Plex Mono, Consolas, Menlo and the system monospace font. Other body or
+code choices use installed fonts with fallbacks. A saved MiSans choice uses
+the default. Reader-v13 through v16 are retired for builds. Their stored
+publications continue to use their original fonts and permit offline export.
+Published pages reuse shared content-hashed URLs for the bundled fonts, cached
+for one year. If a previously opened v13–v16 reader still uses a cached redirect
+to the retired shared font URL, hard-refresh the page or clear this site's cache.
+Both v18 offline formats embed the OFL fonts and retain their
+notices without third-party requests.
+The line-height selector offers 1.4, 1.72 (default), 2 and 2.4 times the text size.
+Body font, code font and line height are saved independently in the browser.
+Online readers link back to their document and, when opened from search, to the
+same query and result page. Section labels combine existing translated headings
+with the original, falling back to the original when no translation exists.
+No model is called to build the directory. HTML and ZIP exports remove instance
+return links and remain usable offline and without JavaScript.
+Reader controls, accessibility labels and application-authored notices use the
+saved translation locale, with Simplified/Traditional Chinese, English, Japanese,
+Korean, French, German and Spanish catalogs. Regional variants use their language
+catalog; explicit Chinese script takes precedence over region. Unsupported reader
+UI languages currently fall back to English without changing the translation
+locale or paper text. UI labels are embedded at generation time and remain usable
+without JavaScript. Management UI language and browser preferences cannot override
+the artifact language; reading layout/font/theme preferences still apply.
+User text, original/translated content, raw diagnostic evidence and legal license
+text remain intact. Publication and export make no translation-service calls.
+Existing publications can preview these changes by rebuilding with `reader-v18`
+from their saved translation, without translating again. Creating a preview does
+not switch the current reading version; switching remains an explicit CAS operation.
+Offline tests establish preservation contracts,
+not trained-model OCR or translation quality.
+
+Translation follows the abbreviation form printed in each source occurrence.
+A full expression with its abbreviation translates the expression and retains
+the abbreviation; later abbreviation-only occurrences retain their spelling,
+case and plural form. Source-defined abbreviations are protected during request
+planning. Automatic terminology suggestions do not expand acronym aliases.
+
+## Original-only academic content
+
+[ir/retention.py](../src/packages/ir/retention.py) recognizes supported author bylines,
+affiliations, contact lines, DOI/ORCID identifiers and bibliography ranges. It uses
+structure and positive metadata evidence; ambiguous prose remains translatable.
+Bibliography retention stops at the next prose section.
+
+Detected blocks create no translation units and are excluded from request context.
+They are retained once, with their original links and formatting, in bilingual,
+source-only and target-only readers and exports. The detector does not rewrite
+source text or retroactively change existing sealed translations/publications.
+Retained content is neither a translation failure nor a human-review claim.
+
+Numeric and math-only table cells, model identifiers and isolated identifier
+subcaptions are retained once. Known full names from confirmed author/affiliation
+metadata stay literal inside translated prose. Complete numeric and author-year
+citations, including their original brackets/separators, and delimited inline TeX
+are protected before translation. Short unambiguous numeric citations remain
+visible to local translation models; equivalent output typography restores their
+exact source spelling, while missing or changed numbers remain quality findings.
+Distinctive system identifiers explicitly named before a title colon remain
+literal in table cells, while surrounding header prose stays translatable.
+Legacy local requests omit neighbouring prose. Prepared Hy-MT requests additionally
+separate bounded background from the sole source unit; MiLMMT receives relevant terms
+only, with that limitation shown in the UI. Explicit numeric scales
+use exact target formatting for Chinese (for example, `8.3 billion` becomes
+`83亿`); source text and quantity values remain unchanged. Abbreviated `M`/`B`
+scales require parameter/model context, so byte units and identifiers are not
+treated as model sizes. Numeric equivalence never exempts missing citations or
+formulas from quality checks.
+
+Reader blocks use tighter padding and gaps, smaller corners, softer borders and backgrounds,
+and no card shadows.
+
+The body-font selector beside the size buttons offers the system default, serif,
+sans-serif, monospace, 方正宋体, 方正黑体, 思源宋体, 思源黑体, 鸿蒙黑体
+and Noto Sans Simplified Chinese. All use installed local copies with fallbacks;
+the selector tooltip explains this. MiSans is not an active option.
+The Noto choice uses the [Noto Sans SC family](https://github.com/google/fonts/blob/main/ofl/notosanssc/METADATA.pb).
+The TOC uses the original section labels,
+author/affiliation lines share the title area, and adjacent list items share a
+list. Footnotes with an explicit source cross-reference appear beside each citing
+block, including repeated citations. Fresh parses can create these links for
+small, raised numeric markers after sentence-ending periods or question marks
+when native PDF glyphs, source text and a unique same-page footnote label agree.
+Word-attached superscripts remain ambiguous. Existing snapshots and uncertain markers stay
+unchanged; unlinked notes remain in the reading flow.
+Inline numeric and author–year citations open the matching original bibliography
+entries in that block's margin. Matching uses only unique labels or a recognized
+author list immediately before the year in the saved document; unresolved or ambiguous citations stay readable
+without a guessed link. Reference cards close with their button or Escape and
+return focus to the citation. Without JavaScript, citation links lead to the
+bibliography. At widths of 1200px and above, notes, references, content hints and
+original-page comparisons occupy the side column; compact screens place them
+below the citing block. Footnotes remain visible when printing. Figures fill the column within the
+viewport height, tables stack source and target text in compact cells with one
+original-table comparison, and contiguous reference entries share one bibliography
+block while retaining their individual anchors. Inline and display TeX use bundled
+KaTeX with native MathML output, bounded expansion and untrusted-input settings;
+invalid formulas retain readable text and PDF comparison. Both ZIP and single-HTML
+exports include the math runtime and work offline. Older templates/artifacts remain
+available unchanged.
+
+## Editing, languages and history
+
+Segment edits, selected translation candidates, source corrections and optional
+semantic review retain version checks and provenance. Manual review is optional
+and becomes stale when its bound text changes. Semantic review produces findings,
+not replacement translations; local translation-only models do not provide it.
+
+All valid supported language tags may be selected, including custom tags. Names
+are shown in their own language where available. Locale normalization preserves
+script/region differences such as `zh-Hans`, `zh-Hant`, `pt` and `pt-BR`.
+Language availability does not certify a model's translation quality.
+
+The [task model](task-model.md) defines main operations, internal steps, related
+operations and retry attempts. Upload and PDF inspection form one task. Parsing,
+translation and publication are separate main tasks linked in sequence, including
+when the selected workflow starts them automatically. Recovery, automatic content
+checks, metadata lookup and indexing belong to the operation they support.
+Clearing finished history applies across pages and filters, while retaining the
+documents, task records, logs, attempts and costs. Active/waiting tasks and those
+with active or unknown permits are ineligible. Changed jobs become visible again;
+"显示已清除历史" includes hidden records. Clearing requires generation and idempotency
+checks and is not data deletion.
+
+## Provider settings and uncertain requests
+
+Saving endpoint, protocol, model and optional key does not test them. An empty key
+preserves the current secret; clearing is explicit. Destination/protocol/auth changes
+cannot silently reuse an old key. Native response identities must match the selected
+model; Gemini permits only the supported `models/` prefix equivalence. No protocol,
+model or provider is silently substituted.
+
+External Responses, Chat Completions, Gemini and Claude replies are limited to
+16 MiB each before and after decompression. The default total HTTP request
+deadline is 180 seconds, including continuously arriving response chunks;
+connection tests use 30 seconds. Oversized, interrupted or invalid compressed
+responses retain an uncertain outcome and are not automatically retried. These
+transport bounds do not change the saved model, request token limits or accounting.
+
+The external-request switch is durable database state. It gates translation,
+semantic review and connection tests, independently of saved credentials and
+per-operation confirmation. It does not disable DOI metadata lookup or explicit
+local model downloads. Disabling it stops new permits; in-flight requests still
+settle. Restoring a backup does not enable it.
+
+New profiles default to cost control off. Known usage may still be recorded and
+unknown amounts remain `null`. Enabled cost control uses reserved, actual and
+unresolved-risk amounts without double counting. A timeout after dispatch remains
+`outcome_unknown`; explicit risk acceptance is needed before retrying. An unknown
+result is never treated as an unsent request or free work.

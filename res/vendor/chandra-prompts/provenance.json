@@ -1,0 +1,14 @@
+{
+  "project": "datalab-to/chandra",
+  "revision": "d4f7467435aa4137d9539f000ddf0b7ced3eb43f",
+  "source_url": "https://raw.githubusercontent.com/datalab-to/chandra/d4f7467435aa4137d9539f000ddf0b7ced3eb43f/chandra/prompts.py",
+  "source_sha256": "53101d315a9923dac2fd65bf64047a73d396c69c409b3680c753315837b151eb",
+  "license_url": "https://raw.githubusercontent.com/datalab-to/chandra/d4f7467435aa4137d9539f000ddf0b7ced3eb43f/LICENSE",
+  "license_sha256": "57a0d3a2d28f72ee9a09a1385ed9231e7c220bcea5d44098a3286955ceb945c5",
+  "license": "Apache-2.0",
+  "copyright": "Copyright 2025 Endless Labs, Inc.",
+  "local_source": "src/packages/parsers/page_prompts.py",
+  "normalized_prompt_sha256": "9b6315a1d8b83bfadc04baa0285b581f7c24b372ca442b38ed258d867bc8825d",
+  "modifications": "Expanded upstream f-strings and normalized whitespace; no SDK imported or bundled.",
+  "verified_on": "2026-11-04"
+}

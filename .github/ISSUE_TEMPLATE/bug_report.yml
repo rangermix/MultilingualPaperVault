@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible problem with Paper Translation.
+title: "Bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues and read the troubleshooting guide first.
+        Do not attach API keys, provider configuration, private PDFs, database dumps, backups, or an entire data directory. Inspect logs and screenshots before sharing.
+        Report suspected security vulnerabilities using SECURITY.md instead of a public issue.
+  - type: input
+    id: revision
+    attributes:
+      label: Source commit and image identity
+      description: Include the checked-out commit and running image tag/digest if available. State when either is unknown.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include host OS, CPU architecture, Docker/Compose versions, browser when relevant, parser/model/backend and configured resource limits. Exclude credentials and private addresses.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior, and actual result
+      description: Include the exact error and frequency. For parsing, distinguish extraction failure from a content-quality finding; share a minimal public or synthetic PDF only when you have permission.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted evidence and troubleshooting
+      description: Include a short log excerpt with time/timezone, relevant task stage, and what you tried. Explain when evidence is unavailable. Never attach secret files or private document content.
+    validations:
+      required: true

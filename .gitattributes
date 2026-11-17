@@ -1,0 +1,19 @@
+# Use LF in checked-out text even when Git is configured with core.autocrlf=true.
+* text=auto eol=lf
+
+# PDF fixtures and source documents must retain their exact binary contents.
+*.pdf binary
+# These frozen artifacts include CRLF or mixed endings in their registered
+# checksums. Preserve their exact bytes on every platform.
+src/packages/domain/migrations/012.json -text whitespace=cr-at-eol
+src/packages/templates/reader-v3.css -text whitespace=cr-at-eol
+src/packages/templates/reader-v3.js -text whitespace=cr-at-eol
+src/packages/templates/reader-v4.css -text whitespace=cr-at-eol
+# Bundled fonts and licenses are hash-pinned vendor bytes. Preserve upstream
+# license whitespace and extracted PDF line endings instead of reformatting them.
+res/vendor/reader-fonts/*.woff2 binary
+res/vendor/reader-fonts/*.txt -text -whitespace
+res/vendor/katex-*/LICENSE -text -whitespace
+# Exact upstream legal text and hash-bound seed/prompt provenance.
+res/vendor/chandra-prompts/LICENSE -text -whitespace
+res/reference/CC-BY-4.0.txt -text -whitespace

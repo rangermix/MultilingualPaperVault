@@ -1,0 +1,60 @@
+# Local agent notes, run records, credentials and runtime state.
+/.agent/tmp/
+/.agent/local-data/
+/.agent/memory/
+/.agent/notes/
+.local-data/
+
+# Separate local research checkout; not part of this repository.
+/benchmarks/
+
+# Python dependencies and generated caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+
+# Frontend dependencies, build output and test caches.
+node_modules/
+/src/apps/web/dist/
+*.tsbuildinfo
+.vite/
+.npm/
+.pnpm-store/
+.playwright/
+test-results/
+playwright-report/
+coverage/
+
+# Credentials and local deployment overrides; keep safe examples.
+/compose.yaml
+.env
+.env.*
+!.env.example
+/secrets/
+/provider_config/
+/deployment/provider_key.*
+
+# Generated logs and editor/OS noise.
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

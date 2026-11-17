@@ -1,0 +1,26 @@
+.git
+.agent
+archive
+# Keep a separately maintained local research checkout out of product builds.
+benchmarks
+.local-data
+.vscode
+compose.yaml
+.venv
+secrets
+provider_config
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/node_modules
+**/dist
+**/test-results
+**/playwright-report
+**/*.tsbuildinfo
+**/*.log
+deployment/provider_key.*
+deployment/.env

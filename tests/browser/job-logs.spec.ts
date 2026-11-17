@@ -1,0 +1,209 @@
+import { test, expect, type Page } from '../../src/apps/web/node_modules/@playwright/test/index.mjs';
+import { outputDirectory } from './paths';
+
+const job = { id: 'job_logs', title: 'Attention Is All You Need', stage: 'parse', status: 'succeeded', generation: 1, control_epoch: 1,
+  created_at: '2026-09-15T01:00:00Z', started_at: '2026-09-15T01:00:01Z', finished_at: '2026-09-15T01:02:01Z',
+  queue_ms: 1000, execution_ms: 120000, actual_model: { kind: 'none' }, config_snapshot: { operation: 'parse' } };
+const entries = Array.from({ length: 112 }, (_, index) => ({
+  sequence: index + 1, at: '2026-09-15T01:01:00Z', level: index % 3 === 0 ? 'warning' : 'info',
+  stage: index % 2 === 0 ? 'parse' : 'quality_check', operation: 'page_processed', page: index + 1,
+  message: `记录 ${index + 1}：已完成页面解析，公式、表格与代码保留原 PDF 对照，详细信息可展开查看。`,
+  details: { note: `页面 ${index + 1} 的完整执行详情`, unit_id: 'unit_' + 'a'.repeat(180) },
+}));
+
+async function setup(page: Page, theme = 'light', failure?: { code: string; message: string; details?: Record<string, unknown> }, overrides: Record<string, unknown> = {}, logs = entries) {
+  const selected = { ...(failure ? { ...job, status: 'failed', error: failure } : job), ...overrides };
+  const errors: string[] = [], queries: URLSearchParams[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (['error', 'warning'].includes(message.type())) errors.push(message.text()); });
+  await page.route('**/api/v1/**', route => {
+    const url = new URL(route.request().url()), path = url.pathname.slice(7);
+    if (path.endsWith('/events')) return route.fulfill({ contentType: 'text/event-stream', body: '' });
+    let json: unknown = { items: [] };
+    if (path === '/capabilities') json = { phase: 'M2', source_mime_types: ['application/pdf'] };
+    if (path === '/settings/preferences') json = { theme, locale: 'zh-Hans', publish_policy: 'manual_approval' };
+    if (path === '/jobs') json = { items: [selected], next_cursor: null };
+    if (path === '/jobs/job_logs') json = selected;
+    if (path === '/jobs/job_logs/logs') {
+      queries.push(url.searchParams);
+      const limit = Number(url.searchParams.get('limit') ?? 50), cursor = Number(url.searchParams.get('cursor') ?? 0);
+      const rows = logs.filter(entry => entry.sequence > cursor
+        && (!url.searchParams.get('level') || entry.level === url.searchParams.get('level'))
+        && (!url.searchParams.get('stage') || entry.stage === url.searchParams.get('stage')));
+      json = { items: rows.slice(0, limit), next_cursor: rows.length > limit ? rows[limit - 1].sequence : null };
+    }
+    return route.fulfill({ json, headers: { ETag: '"1"' } });
+  });
+  await page.goto('/#/jobs/job_logs');
+  await expect(page).toHaveTitle(/对照文库/);
+  await expect(page.getByRole('heading', { name: '解析原文 · Attention Is All You Need' })).toBeVisible();
+  return { errors, queries };
+}
+
+for (const error of [null, {}]) {
+  test(`completed job with ${error === null ? 'null' : 'empty'} error keeps warnings without a failure alert`, async ({ page }) => {
+    const { errors } = await setup(page, 'light', undefined, {
+      status: 'completed_with_warnings', error,
+      verified_blocks: 172, total_blocks: 172, verified_units: 336, total_units: 336,
+      progress: { recovered_errors: [{ error: { code: 'INSTANCE_CONCURRENCY_LIMIT' }, reason: 'all_translation_units_succeeded' }] },
+    });
+    await expect(page.getByRole('heading', { name: '执行记录', exact: true })).toBeVisible();
+    await expect(page.getByRole('alert', { name: '任务错误' })).toHaveCount(0);
+    await expect(page.getByText('任务未完成', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('已完成，有提示', { exact: true }).first()).toBeVisible();
+    await expect(page.locator('dd').filter({ hasText: /^172 \/ 172$/ })).toBeVisible();
+    await expect(page.locator('dd').filter({ hasText: /^336 \/ 336$/ })).toBeVisible();
+    await page.getByRole('combobox', { name: '等级', exact: true }).selectOption('warning');
+    await expect(page.locator('.task-logs > li').first()).toContainText('记录 1：');
+    expect(errors).toEqual([]);
+  });
+}
+
+test('failed job exposes its localized summary and code while preserving raw diagnostics in details', async ({ page }) => {
+  const message = 'Docker Model Runner could not initialize the selected model. <script>window.errorExecuted=true</script>';
+  const { errors } = await setup(page, 'light', { code: 'PARSER_DMR_BACKEND_INIT_FAILED', message,
+    details: { page: 1, phase: 'model_inference', backend: 'vllm', http_status: 500 } });
+  const alert = page.getByRole('alert', { name: '任务错误' });
+  await expect(alert).toBeVisible();
+  await expect(alert).toContainText('无法启动所选模型');
+  await expect(alert).toContainText(message);
+  await expect(alert.getByText(message, { exact: true })).toBeHidden();
+  await expect(alert.locator('code')).toHaveText('PARSER_DMR_BACKEND_INIT_FAILED');
+  expect(await alert.evaluate(element => Boolean(element.compareDocumentPosition(document.querySelector('.job-records')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await expect(alert.locator('pre')).toBeHidden();
+  await alert.getByText('错误技术详情', { exact: true }).click();
+  await expect(alert.getByText(message, { exact: true })).toBeVisible();
+  await expect(alert.locator('pre')).toContainText('"http_status": 500');
+  await expect(alert.locator('pre')).toContainText('"page": 1');
+  await expect(alert.locator('script')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as { errorExecuted?: boolean }).errorExecuted)).toBeUndefined();
+  await page.screenshot({ path: outputDirectory('job-failure-desktop.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await alert.scrollIntoViewIfNeeded();
+  await expect(alert.locator('code')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: outputDirectory('job-failure-mobile.png') });
+  expect(errors).toEqual([]);
+});
+
+for (const width of [390, 1440]) test(`application log operations localize while raw messages remain verbatim at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 });
+  const operations = [
+    ['created', 'Task created', '任務已建立'], ['started', 'Execution started', '開始執行'],
+    ['finished', 'Execution finished', '執行結束'], ['state_changed', 'Task status updated', '任務狀態已更新'],
+    ['lease_expired', 'Execution lease expired', '執行租約已到期'], ['model_loaded', 'Model loaded', '模型已載入'],
+    ['loading_model', 'Loading model', '正在載入模型'], ['page_started', 'Parsing page', '正在解析頁面'],
+    ['page_completed', 'Page parsing completed', '頁面解析完成'], ['check_failed', 'Check incomplete', '檢查未完成'],
+    ['recovery_started', 'Recovering missing content', '開始恢復缺失內容'], ['recovery_completed', 'Content recovery finished', '內容恢復結束'],
+    ['metadata_lookup', 'Looking up publication information', '正在查詢文獻信息'],
+    ['dispatch', 'API request dispatched', '已派發 API 請求'], ['response_received', 'API response received', '已收到 API 回應'],
+    ['progress', 'Execution progress updated', '執行進度已更新'],
+    ['history_backfill', 'Document and task information filled from existing records', '已從原有記錄補全文檔和任務資訊'],
+    ['future_operation', 'Task execution record', '任務執行記錄'],
+    ['constructor', 'Task execution record', '任務執行記錄'], ['__proto__', 'Task execution record', '任務執行記錄'],
+  ];
+  const raw = '模型加载失败 RAW_DIAGNOSTIC <script>window.errorExecuted=true</script>';
+  const rows = operations.map(([operation], index) => ({ ...entries[index], operation, message: `${raw} ${index}` }));
+  const { errors } = await setup(page, 'light', { code: 'PARSER_DMR_CONNECTION_FAILED', message: raw }, {}, rows);
+  const settings = await page.context().newPage();
+  const settingsState = await setup(settings);
+  await settings.goto('/#/settings');
+  for (const [locale, column] of [['en', 1], ['zh-Hant', 2]] as const) {
+    await settings.locator('#ui-language').selectOption(locale);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    await expect(page.locator('.task-log-message')).toHaveText(operations.map(row => row[column]));
+    await expect(page.locator('.job-failure').getByText(raw, { exact: true })).toBeHidden();
+    expect(await page.locator('.task-logs').innerText()).not.toContain('RAW_DIAGNOSTIC');
+    await page.screenshot({ path: outputDirectory(`job-logs-${locale}-${width}.png`) });
+    const first = page.locator('.task-logs > li').first();
+    await first.locator('summary').click();
+    await expect(first.locator('pre')).toContainText(`${raw} 0`);
+    await first.locator('summary').click();
+    await page.locator('.job-failure details > summary').click();
+    await expect(page.locator('.job-failure').getByText(raw, { exact: true })).toBeVisible();
+    await page.locator('.job-failure details > summary').click();
+    await expect(page.locator('.job-failure script, .task-logs script')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  expect(await page.evaluate(() => (window as unknown as { errorExecuted?: boolean }).errorExecuted)).toBeUndefined();
+  expect(settingsState.errors).toEqual([]);
+  await settings.close();
+  expect(errors).toEqual([]);
+});
+
+for (const theme of ['light', 'dark']) {
+  test(`task logs ${theme}: compact rows expand by click and keyboard on desktop and mobile`, async ({ page }) => {
+    const { errors } = await setup(page, theme);
+    const logs = page.locator('.task-logs');
+    await expect(logs.locator('li')).toHaveCount(50);
+    await expect(page.getByRole('link', { name: '下载全部脱敏日志' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '复制本页' })).toHaveCount(0);
+    const row = logs.locator('li').first();
+    await expect(row.locator('pre')).toBeHidden();
+    await row.locator('summary').click();
+    await expect(row.locator('pre')).toBeVisible();
+    await expect(row.locator('pre')).toContainText('页面 1 的完整执行详情');
+    await row.locator('summary').press('Enter');
+    await expect(row.locator('pre')).toBeHidden();
+    await page.getByRole('combobox', { name: '每页日志' }).selectOption('10');
+    await expect(logs.locator('li')).toHaveCount(10);
+    await page.getByRole('heading', { name: '任务日志', exact: true }).evaluate(element => element.scrollIntoView({ block: 'start' }));
+    await expect(page.locator('vite-error-overlay')).toHaveCount(0);
+    await page.screenshot({ path: outputDirectory(`job-logs-${theme}-desktop.png`) });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('heading', { name: '任务日志', exact: true }).evaluate(element => element.scrollIntoView({ block: 'start' }));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: outputDirectory(`job-logs-${theme}-mobile.png`) });
+    await row.locator('summary').click();
+    await expect(row.locator('pre')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: outputDirectory(`job-logs-${theme}-mobile-expanded.png`) });
+    expect(errors).toEqual([]);
+  });
+}
+
+test('log page sizes and filters reset cursors and keep page contents consistent', async ({ page }) => {
+  const { errors, queries } = await setup(page);
+  const rows = page.locator('.task-logs > li');
+  const size = page.getByRole('combobox', { name: '每页日志' });
+  const previous = page.getByRole('button', { name: '上一页日志' });
+  const next = page.getByRole('button', { name: '下一页日志' });
+  await size.selectOption('10');
+  await expect(rows).toHaveCount(10);
+  await expect(previous).toBeDisabled();
+  await next.click();
+  await expect(rows.first()).toContainText('记录 11：');
+  await expect(page.getByText('第 2 页', { exact: true })).toBeVisible();
+  await previous.click();
+  await expect(rows.first()).toContainText('记录 1：');
+  await next.click();
+  await expect(rows.first()).toContainText('记录 11：');
+  await size.selectOption('100');
+  await expect(rows).toHaveCount(100);
+  await expect(rows.first()).toContainText('记录 1：');
+  await expect(previous).toBeDisabled();
+  expect(queries.at(-1)?.has('cursor')).toBe(false);
+  await next.click();
+  await expect(rows).toHaveCount(12);
+  await expect(rows.first()).toContainText('记录 101：');
+  await expect(next).toBeDisabled();
+  await size.selectOption('25');
+  await expect(rows).toHaveCount(25);
+  await next.click();
+  await expect(rows.first()).toContainText('记录 26：');
+  await page.getByRole('combobox', { name: '等级', exact: true }).selectOption('warning');
+  await expect(rows.first()).toContainText('记录 1：');
+  await expect(previous).toBeDisabled();
+  expect(queries.at(-1)?.has('cursor')).toBe(false);
+  expect(queries.at(-1)?.get('limit')).toBe('25');
+  await page.getByRole('combobox', { name: '阶段', exact: true }).selectOption('quality_check');
+  await expect(rows).toHaveCount(19);
+  await expect(rows.first()).toContainText('记录 4：');
+  await expect(next).toBeDisabled();
+  await page.getByRole('combobox', { name: '等级', exact: true }).selectOption('error');
+  await expect(page.getByText('此筛选下暂无日志。')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: '阶段', exact: true })).toHaveValue('quality_check');
+  await expect(previous).toBeDisabled();
+  await expect(next).toBeDisabled();
+  expect(errors).toEqual([]);
+});

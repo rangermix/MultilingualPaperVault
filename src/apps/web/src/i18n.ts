@@ -1,0 +1,84 @@
+import { useSyncExternalStore } from 'react';
+import { coreMessages } from './locales/core';
+import { settingsMessages } from './locales/settings';
+import { workflowMessages } from './locales/workflow';
+import { editorMessages } from './locales/editor';
+import { auditMessages } from './locales/audit';
+import { extendedMessages, uiLocales, type UiLocale } from './locales/extended';
+import type { UiText } from './ui-message';
+
+export { uiLocales };
+export type { UiLocale };
+export const uiLocaleStorageKey = 'paper-translation.ui-locale.v1';
+export const messages: Record<string, readonly [string, string]> = {
+  ...settingsMessages, ...workflowMessages, ...editorMessages, ...coreMessages, ...auditMessages,
+};
+
+export function resolveUiLocale(languages: readonly string[]): UiLocale {
+  for (const language of languages) {
+    try {
+      const locale = new Intl.Locale(language);
+      if (locale.language === 'zh') return locale.maximize().script === 'Hant' ? 'zh-Hant' : 'zh-Hans';
+      const supported = uiLocales.find(option => option.value === locale.language);
+      if (supported) return supported.value;
+    } catch { /* Ignore malformed browser or stored locale tags. */ }
+  }
+  return 'en';
+}
+function savedLocale(value: string | null): UiLocale | undefined {
+  return uiLocales.find(locale => locale.value === value)?.value;
+}
+function browserLocale(): UiLocale {
+  return typeof window === 'undefined' ? 'zh-Hans' : resolveUiLocale(navigator.languages?.length ? navigator.languages : [navigator.language]);
+}
+function initialLocale(): UiLocale {
+  try { return savedLocale(localStorage.getItem(uiLocaleStorageKey)) ?? browserLocale(); }
+  catch { return browserLocale(); }
+}
+let currentLocale = initialLocale();
+const listeners = new Set<() => void>();
+export function getUiLocale(): UiLocale { return currentLocale; }
+function publishLocale(locale: UiLocale) {
+  if (locale === currentLocale) return;
+  currentLocale = locale;
+  listeners.forEach(listener => listener());
+}
+export function setUiLocale(locale: UiLocale) {
+  if (!uiLocales.some(option => option.value === locale)) return;
+  try { localStorage.setItem(uiLocaleStorageKey, locale); } catch { /* The in-memory choice still works when storage is blocked. */ }
+  publishLocale(locale);
+}
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+export function useUiLocale() { return useSyncExternalStore(subscribe, getUiLocale, () => 'zh-Hans' as const); }
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', event => {
+    if (event.key !== uiLocaleStorageKey && event.key !== null) return;
+    // Only localStorage events affect this browser preference; sessionStorage does not.
+    try { if (event.storageArea && event.storageArea !== localStorage) return; } catch { return; }
+    publishLocale(savedLocale(event.newValue) ?? browserLocale());
+  });
+}
+
+/** Translate only application-authored UI messages. Never pass paper/user content. */
+export function t(message: UiText, values?: Record<string, string | number>): string {
+  const source = typeof message === 'string' ? message : message.key;
+  values = typeof message === 'string' ? values : message.values;
+  const entry = Object.hasOwn(messages, source) ? messages[source] : undefined;
+  let translated = source;
+  if (entry && currentLocale !== 'zh-Hans') {
+    if (currentLocale === 'en') translated = entry[0];
+    else if (currentLocale === 'zh-Hant') translated = entry[1];
+    else {
+      const catalog = extendedMessages[currentLocale];
+      if (Object.hasOwn(catalog, entry[0])) translated = catalog[entry[0]];
+    }
+  }
+  return values ? translated.replace(/\{([\w]+)\}/g, (match, name: string) =>
+    Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : match) : translated;
+}
+export function formatList(values: readonly string[]): string {
+  return new Intl.ListFormat(currentLocale, { style: 'long', type: 'conjunction' }).format(values);
+}

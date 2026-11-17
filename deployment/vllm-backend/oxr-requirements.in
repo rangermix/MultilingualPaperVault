@@ -1,0 +1,8 @@
+vllm==0.25.1
+torch==2.11.0+cu130
+torchaudio==2.11.0+cu130
+torchcodec @ https://download.pytorch.org/whl/cu130/torchcodec-0.17.0%2Bcu130-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl#sha256=ec006a0091ecaae6f3f77d8856e1948759359c019dfd0fac2f5124d6d54c2c3b
+torchvision==0.26.0+cu130
+transformers==5.13.1
+setuptools==80.10.2
+wheel

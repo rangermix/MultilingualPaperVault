@@ -1,0 +1,50 @@
+import { test, expect } from '../../src/apps/web/node_modules/@playwright/test/index.mjs';
+import { outputDirectory } from './paths';
+
+test.beforeEach(() => {
+  test.skip(process.env.LIBRARY_LIVE_BROWSER !== '1', 'Set LIBRARY_LIVE_BROWSER=1 only for the designated acceptance instance.');
+  expect(process.env.LIBRARY_BROWSER_URL, 'Live browser tests require an explicit LIBRARY_BROWSER_URL').toBeTruthy();
+});
+import { resolve } from 'node:path';
+const root = resolve(import.meta.dirname, '../..');
+test('real Compose PDF upload persists across browser reload and metadata changes', async ({ page }) => {
+  test.setTimeout(90000);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/#/upload');
+  await page.getByLabel('处理方式', { exact: true }).selectOption('source');
+  await page.locator('input[type=file]').setInputFiles(resolve(root, 'tests/fixtures/sample.pdf'));
+  await page.getByRole('button', { name: '上传并生成原文阅读版', exact: true }).click();
+  const duplicate = page.getByRole('button', { name: '建立独立文档' });
+  const saved = page.getByRole('link', { name: '已入库，后台处理中 · 查看文档' });
+  await expect(duplicate.or(saved)).toBeVisible({ timeout: 60000 });
+  if (await duplicate.isVisible()) await duplicate.click();
+  await saved.click();
+  await expect(page.getByRole('heading', { name: '文档信息', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '编辑标题与标签' }).click();
+  const uniqueTitle = `Agent acceptance ${Date.now()}`;
+  await page.getByLabel('标题', { exact: true }).fill(uniqueTitle);
+  await page.getByLabel('标签（逗号分隔）').fill('agent-acceptance, PDF');
+  await page.getByRole('button', { name: '保存目录信息', exact: true }).click();
+  await expect(page.getByRole('heading', { name: uniqueTitle, exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '收藏', exact: true }).click();
+  await expect(page.getByRole('button', { name: '取消收藏', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: uniqueTitle, exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '取消收藏', exact: true })).toBeVisible();
+  await expect(page.getByText('agent-acceptance · PDF')).toBeVisible();
+  const pdf = await page.request.get(await page.getByRole('link', { name: '查看原文 PDF', exact: true }).getAttribute('href')!);
+  expect(pdf.status()).toBe(200);
+  const source = await import('node:fs/promises').then(fs => fs.readFile(resolve(root, 'tests/fixtures/sample.pdf')));
+  expect(await pdf.body()).toEqual(source);
+  await page.screenshot({ path: resolve(outputDirectory('live'), 'live-document-desktop.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: resolve(outputDirectory('live'), 'live-document-mobile.png'), fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: '归档文档', exact: true }).click();
+  await expect(page.getByRole('button', { name: '取消归档', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: '取消归档', exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+  // Keep the clearly marked, archived acceptance record for evidence; no deletion or translation-provider call.
+});

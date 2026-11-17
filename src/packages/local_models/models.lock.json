@@ -1,0 +1,1284 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "hy-mt2-1.8b-q8",
+      "label": "Hy-MT2-1.8B Q8",
+      "family": "hy",
+      "parameter_size": "1.8B",
+      "quantization": "Q8",
+      "bits": 8,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/Hy-MT2-1.8B-8bit",
+      "revision": "f54bb3b8885363fd8b83d63d50b50a12a138321f",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "sha256": "b7491ec0e9c869dfce20f2176758099bf248d979dd05530ede99deb21698acee",
+          "size": 654
+        },
+        {
+          "path": "config.json",
+          "sha256": "dc8cdfe7dba52d60296152c533aa9afbc5918dfd5deb98693fdb05ac3817495f",
+          "size": 1688
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0e28667f1cb4c7b880b9223b2d87978f88e79ed7ae037de1021f826c18d4ed6f",
+          "size": 221
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "48fc521875c36d09d6d631bd74cf57304a8e8c1191fa08316437759690f3c9b7",
+          "size": 1903246631
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "bfdd9df0dc0dd2da346417e7a822719dffa95522adabc868a622b1b7ab2a8e2b",
+          "size": 57380
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "b475bbef1b0b2fd57dcb865332b546475bd1ede2deb3bb91bafd0c047a8a530a",
+          "size": 9527287
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "9c8fad86305966b62964ad3f4b56d00fb3234141028a31710ca312ba3e417cd9",
+          "size": 359
+        }
+      ]
+    },
+    {
+      "id": "milmmt-46-4b-q4",
+      "label": "MiLMMT-46-4B Q4",
+      "family": "milmmt",
+      "parameter_size": "4B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "shraey/milmmt-46-4b-mlx-4bit",
+      "revision": "5ab3064f33e24d0bacb7126eaa5284d926ee05b3",
+      "context_size": 8192,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "config.json",
+          "sha256": "78c3f4553bc38bc4e9becc67613f88c691740117977347af7a90787cbcaf0569",
+          "size": 2711
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "f54c76982ad0aa54f0fc247cd017586570b4b9a3dc9653f86246eb13a82af8a4",
+          "size": 210
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "3ce54f79ca0d673022cace89cb4357c695e8a30bd791672197a82b05bb711120",
+          "size": 2560876251
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "71690d582db0a74c650235dfd102c866c6ddfb4c6ef2a75bd6460f5732158d9b",
+          "size": 79954
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "daab2354f8a74e70d70b4d1f804939b68a8c9624dd06cb7858e52dd8970e9726",
+          "size": 33384567
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "c4bb1cf181c6dba7a75b2427fbd0b1656f054be253d9267598bd4cc5fabb11ff",
+          "size": 804
+        }
+      ]
+    },
+    {
+      "id": "hy-mt2-7b-q4",
+      "label": "Hy-MT2-7B Q4",
+      "family": "hy",
+      "parameter_size": "7B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/Hy-MT2-7B-4bit",
+      "revision": "9b7204bdb161490a8ce49ce607c1310cc3fd03ad",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "sha256": "788ac16c5d7bfefc28655928ad524c8f378a44cb24d24fb125d6a5859b167677",
+          "size": 662
+        },
+        {
+          "path": "config.json",
+          "sha256": "03ce74a3e7160193621b85ac637537278de6214f2677513c35f3eb343056883a",
+          "size": 1721
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "56cd0974cae79f49ecaec4a02936bcabed2a4c8d8b6a780bf4a94ccbf344a78b",
+          "size": 217
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "3f4ae381527394ed768ca8eed3cf69940d9d54415bf555c26072d6c0d5f94a42",
+          "size": 4221806239
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "20976f5c66c1dd333a2877f7d253b0ceb5188bad283b001cd6248f3e054bb82d",
+          "size": 57380
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "4185389a69284fdd3ebf737c6120bbeee36cbed9763151fa5bac5986a39e05d4",
+          "size": 16388221
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "c22cbe91c8a483be0947552bc45505f4f5d32b1d5ad6bdaa38e49f5aac6d8e7a",
+          "size": 277
+        }
+      ]
+    },
+    {
+      "id": "milmmt-46-12b-q4",
+      "label": "MiLMMT-46-12B Q4",
+      "family": "milmmt",
+      "parameter_size": "12B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/MiLMMT-46-12B-v0.1-4bit",
+      "revision": "184f0d7ff022d769fdec0dfdc3a37995bdb94285",
+      "context_size": 8192,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "config.json",
+          "sha256": "20d09f7c78d028f973b2b011d9df30d6f68087f10e209717573c0580a8bfcce6",
+          "size": 3136
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "3ddcb768803aca045e5c92f767dfc72d9b6680b2b469d0d3d28b4ea1cd455d87",
+          "size": 168
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "sha256": "7c58a1144f6a1403a2b3c92bf8abf28ec1514093f04a5d3d040b95d8d24d8f44",
+          "size": 5367402100
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "sha256": "82c3ca0c158843114f9c01f74f7f5c050680841e4da6105a966422eec5f00b03",
+          "size": 1818630813
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "0a60440eefe7c6bfee0f07223b22640e9f5d3e7f7bda56303ec2a4dbb73fa451",
+          "size": 132288
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "699f9e158c1d67f7ee753c3c9fefb5109da61015374d02fac3b384f9fab00015",
+          "size": 33378162
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "492d8ae4e982d769c317518b8f659628ba93220f4d27bb3f7787427e7f67f6d6",
+          "size": 812
+        }
+      ]
+    },
+    {
+      "id": "hy-mt2-1.8b-bf16-vllm",
+      "label": "Hy-MT2-1.8B BF16 Safetensors",
+      "family": "hy",
+      "parameter_size": "1.8B",
+      "quantization": "BF16",
+      "bits": 16,
+      "runtime": "vllm",
+      "inference_backends": [
+        "vllm"
+      ],
+      "format": "safetensors",
+      "repo": "tencent/Hy-MT2-1.8B",
+      "revision": "9a341cd1b679d3efd23b46e847b01745a71ed792",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "sha256": "b7491ec0e9c869dfce20f2176758099bf248d979dd05530ede99deb21698acee",
+          "size": 654
+        },
+        {
+          "path": "config.json",
+          "sha256": "da40c514cc74a5748a2e591b1b95fca4b7e94de05349abe4ea4164a82641de1a",
+          "size": 1348
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0e28667f1cb4c7b880b9223b2d87978f88e79ed7ae037de1021f826c18d4ed6f",
+          "size": 221
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "29e9117a44c79f81857613601968ff482d8a23c2d6736a1710bba9e5ca4762e5",
+          "size": 4077072784
+        },
+        {
+          "path": "special_tokens_map.json",
+          "sha256": "bb9f59990034dae326581b9c62471523975417869f78a244b7ae2ce8cbb085eb",
+          "size": 488
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "b475bbef1b0b2fd57dcb865332b546475bd1ede2deb3bb91bafd0c047a8a530a",
+          "size": 9527287
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "53bd8581b601a8ee9caefeb988207de50b3fc0b733295bdf5ad68dec4cc0b07c",
+          "size": 165815
+        }
+      ]
+    },
+    {
+      "id": "hy-mt2-1.8b-q4-k-m-gguf",
+      "label": "Hy-MT2-1.8B Q4_K_M GGUF",
+      "family": "hy",
+      "parameter_size": "1.8B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "tencent/Hy-MT2-1.8B-GGUF",
+      "revision": "a0c709d9fac510f2c807aa3af52872340dc37a4a",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "Hy-MT2-1.8B-Q4_K_M.gguf",
+          "sha256": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699",
+          "size": 1133080448
+        }
+      ]
+    },
+    {
+      "id": "hy-mt2-7b-q4-k-m-gguf",
+      "label": "Hy-MT2-7B Q4_K_M GGUF",
+      "family": "hy",
+      "parameter_size": "7B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "tencent/Hy-MT2-7B-GGUF",
+      "revision": "ab8472660ac61fac25f1af43fac2599d52a8a775",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "Hy-MT2-7B-Q4_K_M.gguf",
+          "sha256": "9f96256500f3fc1ab4d64336b58f52a949a95ad7516b0c229476eef782f9f77b",
+          "size": 4624648896
+        }
+      ]
+    },
+    {
+      "id": "milmmt-46-1b-q4-k-m-gguf",
+      "label": "MiLMMT-46-1B Q4_K_M GGUF",
+      "family": "milmmt",
+      "parameter_size": "1B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/MiLMMT-46-1B-v0.1-GGUF",
+      "revision": "b1df0ed3a68176ac11281077fdf74a8c17e4938f",
+      "context_size": 8192,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "MiLMMT-46-1B-v0.1.Q4_K_M.gguf",
+          "sha256": "9d5c10855eb2688d453e3069e7b6dee1756fc834d738d2dc04318511993fd54f",
+          "size": 1013675392
+        }
+      ]
+    },
+    {
+      "id": "milmmt-46-4b-q4-k-m-gguf",
+      "label": "MiLMMT-46-4B Q4_K_M GGUF",
+      "family": "milmmt",
+      "parameter_size": "4B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/MiLMMT-46-4B-v0.1-GGUF",
+      "revision": "815334b74647f86974cff78145d5101e805d8f44",
+      "context_size": 8192,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "MiLMMT-46-4B-v0.1.Q4_K_M.gguf",
+          "sha256": "9888198d9f1cbac935f6428a2a4aead1272f55c1d5ebacd395ab1575bd09b1ec",
+          "size": 2867472640
+        }
+      ]
+    },
+    {
+      "id": "milmmt-46-12b-q4-k-m-gguf",
+      "label": "MiLMMT-46-12B Q4_K_M GGUF",
+      "family": "milmmt",
+      "parameter_size": "12B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/MiLMMT-46-12B-v0.1-GGUF",
+      "revision": "5d881dd4daff5a463aec0b84b8072d0b3d9931d8",
+      "context_size": 8192,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "MiLMMT-46-12B-v0.1.Q4_K_M.gguf",
+          "sha256": "c9ccc4ae361c83aa63d2c0995851f4bb1981609959ed184727c1d135d81cd28f",
+          "size": 7867146656
+        }
+      ]
+    },
+    {
+      "id": "minicpm5-1b-q4",
+      "label": "MiniCPM5-1B Q4 analyst",
+      "family": "minicpm5",
+      "parameter_size": "1B",
+      "quantization": "Q4",
+      "purpose": "analysis",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "openbmb/MiniCPM5-1B-MLX",
+      "revision": "9879b18bf2928355fcdf4287635388a3665a40cb",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "chat_template.jinja",
+          "sha256": "7451a05cf1e28a79d97d7c0bc951028c0b1915119bf9046acd06a0e3d931f47c",
+          "size": 9062
+        },
+        {
+          "path": "config.json",
+          "sha256": "b579f8c12b692af13bb90402c704c3a235d183c0410b37537447c17975a8ddcc",
+          "size": 926
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "3fd3b57f068f133267d97a1e06d7209aaeab546010e7ec71bace0d3fabd1f755",
+          "size": 201
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "a23e0c5c79944a0b2cc92cb9ab79376b4dce41e2312383727e21ee43fe19cb4f",
+          "size": 608026621
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "b9f00d16700ba0dd01bbd72d270080757355ddf41fbe678620a93dc39d5c8639",
+          "size": 39380
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "3e065a558a034185fe299917b398685c1facd0169a9eea1e629eb30c171fed81",
+          "size": 9894271
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "3f18b805749e5e506321c6d231f0e760c44cc030c80b4b0544e41cb3ecb16846",
+          "size": 417
+        }
+      ]
+    },
+    {
+      "id": "minicpm5-1b-q4-k-m-gguf",
+      "label": "MiniCPM5-1B Q4_K_M GGUF analyst",
+      "family": "minicpm5",
+      "parameter_size": "1B",
+      "quantization": "Q4_K_M",
+      "purpose": "analysis",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "openbmb/MiniCPM5-1B-GGUF",
+      "revision": "3d55fac80935ae6456986ad2384b5cbcc4d6c948",
+      "context_size": 8192,
+      "license": "apache-2.0",
+      "files": [
+        {
+          "path": "MiniCPM5-1B-Q4_K_M.gguf",
+          "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+          "size": 688065920
+        }
+      ]
+    },
+    {
+      "id": "translategemma-4b-q4-k-m-gguf",
+      "label": "TranslateGemma-4B Q4_K_M GGUF",
+      "family": "translategemma",
+      "parameter_size": "4B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/translategemma-4b-it-GGUF",
+      "revision": "d37868f759d2f817a43d28dd80cf9f982ffa62fd",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "translategemma-4b-it.Q4_K_M.gguf",
+          "sha256": "81200d03e843d2ec1ece6eeafe7d13cb6e5211e1fcd336ade55790b683a08330",
+          "size": 2489909760
+        }
+      ]
+    },
+    {
+      "id": "translategemma-4b-q4",
+      "label": "TranslateGemma-4B Q4",
+      "family": "translategemma",
+      "parameter_size": "4B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/translategemma-4b-it-4bit",
+      "revision": "5788ec08c047f3f2e17808101b8d9566ac930d58",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "added_tokens.json",
+          "size": 35,
+          "sha256": "50b2f405ba56a26d4913fd772089992252d7f942123cc0a034d96424221ba946"
+        },
+        {
+          "path": "chat_template.jinja",
+          "size": 16982,
+          "sha256": "5e85514635b80a62b64c9982810bfdfbdd482be9a59ed12c25ded2bf3aabddaf"
+        },
+        {
+          "path": "config.json",
+          "size": 2815,
+          "sha256": "033e1d370b223272e880fc9ba20c570f8464be7ada7b6177d2c8e5be9a10f90c"
+        },
+        {
+          "path": "generation_config.json",
+          "size": 128,
+          "sha256": "1bf6761ba6159ba03953656905638ce2811ef05127fe3e1745ba14a2daa03763"
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "113acb0c29997a3015af84bec2c8f967cb7b15f8959d1c26b9628b921e324c40",
+          "size": 2183295977
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "size": 79768,
+          "sha256": "3a5bbc82ff34d68405c524e03aca88d2e455dacf87e3957441c10a389e48c518"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "size": 662,
+          "sha256": "2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397"
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "4667f2089529e8e7657cfb6d1c19910ae71ff5f28aa7ab2ff2763330affad795",
+          "size": 33384568
+        },
+        {
+          "path": "tokenizer.model",
+          "sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
+          "size": 4689074
+        },
+        {
+          "path": "tokenizer_config.json",
+          "size": 1155413,
+          "sha256": "120c4a25aed6436edaac2e3966c9aa026bc13b5f7d3d9a81fc7afe2569b9e28b"
+        }
+      ]
+    },
+    {
+      "id": "translategemma-12b-q4-k-m-gguf",
+      "label": "TranslateGemma-12B Q4_K_M GGUF",
+      "family": "translategemma",
+      "parameter_size": "12B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/translategemma-12b-it-GGUF",
+      "revision": "41d7c8aa650b26791225ad9d0597e674e680da96",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "translategemma-12b-it.Q4_K_M.gguf",
+          "sha256": "b7aac4b4be7ab0c49b6556c29c4467e74313df7f1e95d9f9676bb2adf0afa528",
+          "size": 7300794112
+        }
+      ]
+    },
+    {
+      "id": "translategemma-12b-q4",
+      "label": "TranslateGemma-12B Q4",
+      "family": "translategemma",
+      "parameter_size": "12B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/translategemma-12b-it-4bit",
+      "revision": "f3dcfd54df14672fbcf0731086fb47a797a943ae",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "added_tokens.json",
+          "size": 35,
+          "sha256": "50b2f405ba56a26d4913fd772089992252d7f942123cc0a034d96424221ba946"
+        },
+        {
+          "path": "chat_template.jinja",
+          "size": 16982,
+          "sha256": "5e85514635b80a62b64c9982810bfdfbdd482be9a59ed12c25ded2bf3aabddaf"
+        },
+        {
+          "path": "config.json",
+          "size": 3269,
+          "sha256": "6dfd4c0c186de41f65dd14677677f04fdfeef2cf3aa99e5d1a89dcdba33a211a"
+        },
+        {
+          "path": "generation_config.json",
+          "size": 128,
+          "sha256": "1bf6761ba6159ba03953656905638ce2811ef05127fe3e1745ba14a2daa03763"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "sha256": "bd64914bb159830648d444dec435236c2690214124761e78ece98d1ef1ee75af",
+          "size": 5367402100
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "sha256": "c3b207c1a3ebafc136664dba65b3f474f73191634428b8380204e647fc844b89",
+          "size": 1252261023
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "size": 132057,
+          "sha256": "41ef6877c551e86c3e4be5c2c5c6ddb281917ed174da29d81931358b0e34c11b"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "size": 662,
+          "sha256": "2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397"
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "4667f2089529e8e7657cfb6d1c19910ae71ff5f28aa7ab2ff2763330affad795",
+          "size": 33384568
+        },
+        {
+          "path": "tokenizer.model",
+          "sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
+          "size": 4689074
+        },
+        {
+          "path": "tokenizer_config.json",
+          "size": 1155413,
+          "sha256": "120c4a25aed6436edaac2e3966c9aa026bc13b5f7d3d9a81fc7afe2569b9e28b"
+        }
+      ]
+    },
+    {
+      "id": "translategemma-27b-q4-k-m-gguf",
+      "label": "TranslateGemma-27B Q4_K_M GGUF",
+      "family": "translategemma",
+      "parameter_size": "27B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "mradermacher/translategemma-27b-it-GGUF",
+      "revision": "22fb50537007ccd41c41a0f0f0482e0fdb3335ab",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "translategemma-27b-it.Q4_K_M.gguf",
+          "sha256": "7f1e67c4ecfec676b38c1ea2ef85c46fafe2f02d3c050fb9540e51787405d8a3",
+          "size": 16546704480
+        }
+      ]
+    },
+    {
+      "id": "translategemma-27b-q4",
+      "label": "TranslateGemma-27B Q4",
+      "family": "translategemma",
+      "parameter_size": "27B",
+      "quantization": "Q4",
+      "bits": 4,
+      "runtime": "mlx",
+      "inference_backends": [
+        "mlx"
+      ],
+      "format": "safetensors",
+      "repo": "mlx-community/translategemma-27b-it-4bit",
+      "revision": "050947f9ea5a93df6cdbbc964e03c6e97894978c",
+      "context_size": 4096,
+      "license": "gemma",
+      "files": [
+        {
+          "path": "added_tokens.json",
+          "size": 35,
+          "sha256": "50b2f405ba56a26d4913fd772089992252d7f942123cc0a034d96424221ba946"
+        },
+        {
+          "path": "chat_template.jinja",
+          "size": 16982,
+          "sha256": "5e85514635b80a62b64c9982810bfdfbdd482be9a59ed12c25ded2bf3aabddaf"
+        },
+        {
+          "path": "config.json",
+          "size": 3726,
+          "sha256": "e9ac7df22ac0e43b8d4d2ea67958e3a2270d70986ee1b954165bb8d46ae2cc87"
+        },
+        {
+          "path": "generation_config.json",
+          "size": 128,
+          "sha256": "1bf6761ba6159ba03953656905638ce2811ef05127fe3e1745ba14a2daa03763"
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "sha256": "2b9287ed89f03b1e12d212f0b3353652c822d1589d2a5e320e2abbbeefda792a",
+          "size": 5366424066
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "sha256": "b3f4b0ff7240d7a5d9e8bb6d81347be190e3b49cb3ecb32ab53d17b8d291170b",
+          "size": 5349900869
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "sha256": "678c8edcacf7bd7f7c1b237f554ccc6d08a95230d0cec5dbe45f1fcc285ec9df",
+          "size": 4478597146
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "size": 170516,
+          "sha256": "2c54ab63793c0d0257d396de1ee63a28c5d519638e568d47ff07846e0f87da94"
+        },
+        {
+          "path": "special_tokens_map.json",
+          "size": 662,
+          "sha256": "2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397"
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "4667f2089529e8e7657cfb6d1c19910ae71ff5f28aa7ab2ff2763330affad795",
+          "size": 33384568
+        },
+        {
+          "path": "tokenizer.model",
+          "sha256": "1299c11d7cf632ef3b4e11937501358ada021bbdf7c47638d13c0ee982f2e79c",
+          "size": 4689074
+        },
+        {
+          "path": "tokenizer_config.json",
+          "size": 1155413,
+          "sha256": "120c4a25aed6436edaac2e3966c9aa026bc13b5f7d3d9a81fc7afe2569b9e28b"
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-0.8b-gguf-q4-k-m",
+      "label": "PLaMo 3 Translate 0.8B Q4_K_M",
+      "family": "plamo3",
+      "parameter_size": "0.8B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "pfnet/plamo-3-translate-0.8b-GGUF",
+      "revision": "03891e907db8a43c97d3a7c75add125cc6d1f96a",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "c9139ab4d8be258257f56c6ce6a0b4848f812fe495a86657c1e139d6b0d5819a",
+          "size": 6339
+        },
+        {
+          "path": "plamo-3-translate-0.8b-Q4_K_M.gguf",
+          "sha256": "3dbb09295bfd3350231ba0dba92bc72cb14111ef1b034e37dad39d581bd86b9c",
+          "size": 573116288
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-0.8b-bf16",
+      "label": "PLaMo 3 Translate 0.8B BF16",
+      "family": "plamo3",
+      "parameter_size": "0.8B",
+      "quantization": "BF16",
+      "bits": 16,
+      "runtime": "vllm",
+      "inference_backends": [
+        "vllm"
+      ],
+      "format": "safetensors",
+      "repo": "pfnet/plamo-3-translate-0.8b",
+      "revision": "cc8e88169807d5a272e8ff06db12eb0129b67f81",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "cd49e7e0dfa8ec847c163db88dfca89b280dddbb73ddc60ba38c62a420eaced2",
+          "size": 5206
+        },
+        {
+          "path": "config.json",
+          "sha256": "b825929ff52a9b94f911df21622cde1a2edf0a71c0710ab06b0dc60c83cacbd0",
+          "size": 1332
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0410d30499cd9db0a83ecbd59a2811b1c4f63f7c9412126a43e8d2b96ec44a85",
+          "size": 120
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "7c9f0066d166c075bdbe83ada3d444e08bd7a6ee3f345f47a1f3c442aa6898c5",
+          "size": 1780709128
+        },
+        {
+          "path": "modeling_plamo.py",
+          "sha256": "498ff5f52b565315325ffff29b6c5e628a55156a4df5cd2bacb48a9c8697f32b",
+          "size": 45413
+        },
+        {
+          "path": "special_tokens_map.json",
+          "sha256": "1004b03ad5c184693765d25d8d682e831727b43b84e321fc9dc14d9ef3d1466a",
+          "size": 587
+        },
+        {
+          "path": "tokenization_plamo.py",
+          "sha256": "68b769d516541603857ce9d2813e48193efe41abb64c1091311b973d491724d9",
+          "size": 22389
+        },
+        {
+          "path": "tokenizer.jsonl",
+          "sha256": "bdce9e430e65931b28c56de2054f52b4cf8ed59b322db125e016d724d06dbb0e",
+          "size": 3526723
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "5468ed5c68b5cf4cf971bcb34be6bfbfd749fe30cc5bc65ace5835ae3bff65b3",
+          "size": 1575
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-2b-gguf-q4-k-m",
+      "label": "PLaMo 3 Translate 2B Q4_K_M",
+      "family": "plamo3",
+      "parameter_size": "2B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "pfnet/plamo-3-translate-2b-GGUF",
+      "revision": "f2b4599dff9b3e45c62567eac15e83186b4cb64e",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "c9139ab4d8be258257f56c6ce6a0b4848f812fe495a86657c1e139d6b0d5819a",
+          "size": 6339
+        },
+        {
+          "path": "plamo-3-translate-2b-Q4_K_M.gguf",
+          "sha256": "2c288ecc7ebfe60c3561726580da3583767f3c41ca3ef5c6825bf6c4cc060787",
+          "size": 1807192480
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-2b-bf16",
+      "label": "PLaMo 3 Translate 2B BF16",
+      "family": "plamo3",
+      "parameter_size": "2B",
+      "quantization": "BF16",
+      "bits": 16,
+      "runtime": "vllm",
+      "inference_backends": [
+        "vllm"
+      ],
+      "format": "safetensors",
+      "repo": "pfnet/plamo-3-translate-2b",
+      "revision": "355637cc04db67195ba87a97da85eaf1d52a22e8",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "cd49e7e0dfa8ec847c163db88dfca89b280dddbb73ddc60ba38c62a420eaced2",
+          "size": 5206
+        },
+        {
+          "path": "config.json",
+          "sha256": "225352fbd3feadcb4a4440f223846f0b7046ed0b0849ef46dd5377783d61f32f",
+          "size": 1333
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0410d30499cd9db0a83ecbd59a2811b1c4f63f7c9412126a43e8d2b96ec44a85",
+          "size": 120
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "sha256": "6548a2e19f6851e79af82b9faea2db8a67efa5a801a071c15594583a802b21c0",
+          "size": 4960253656
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "sha256": "b40958aadc5eb4b4ae081a6d932bfbfe99906c9155f6caa4265fa1b8ea99040f",
+          "size": 796966328
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "dfa1e00be9eb515d29de8b9f71e5986b2a2c4ec4d8cc28249128ab3272f781e8",
+          "size": 21151
+        },
+        {
+          "path": "modeling_plamo.py",
+          "sha256": "498ff5f52b565315325ffff29b6c5e628a55156a4df5cd2bacb48a9c8697f32b",
+          "size": 45413
+        },
+        {
+          "path": "special_tokens_map.json",
+          "sha256": "1004b03ad5c184693765d25d8d682e831727b43b84e321fc9dc14d9ef3d1466a",
+          "size": 587
+        },
+        {
+          "path": "tokenization_plamo.py",
+          "sha256": "68b769d516541603857ce9d2813e48193efe41abb64c1091311b973d491724d9",
+          "size": 22389
+        },
+        {
+          "path": "tokenizer.jsonl",
+          "sha256": "bdce9e430e65931b28c56de2054f52b4cf8ed59b322db125e016d724d06dbb0e",
+          "size": 3526723
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "5468ed5c68b5cf4cf971bcb34be6bfbfd749fe30cc5bc65ace5835ae3bff65b3",
+          "size": 1575
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-8b-gguf-q4-k-m",
+      "label": "PLaMo 3 Translate 8B Q4_K_M",
+      "family": "plamo3",
+      "parameter_size": "8B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "pfnet/plamo-3-translate-8b-GGUF",
+      "revision": "c420296e9694ccb2455f038b3f29eee5a2200217",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "c9139ab4d8be258257f56c6ce6a0b4848f812fe495a86657c1e139d6b0d5819a",
+          "size": 6339
+        },
+        {
+          "path": "plamo-3-translate-8b-Q4_K_M.gguf",
+          "sha256": "6b429549113ce0a61281ac72be195697241f89266f4247efec4893e4f580cf10",
+          "size": 5280435168
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-8b-bf16",
+      "label": "PLaMo 3 Translate 8B BF16",
+      "family": "plamo3",
+      "parameter_size": "8B",
+      "quantization": "BF16",
+      "bits": 16,
+      "runtime": "vllm",
+      "inference_backends": [
+        "vllm"
+      ],
+      "format": "safetensors",
+      "repo": "pfnet/plamo-3-translate-8b",
+      "revision": "681bd55cf01f5412aab8881e6a4a276c948fabc1",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "cd49e7e0dfa8ec847c163db88dfca89b280dddbb73ddc60ba38c62a420eaced2",
+          "size": 5206
+        },
+        {
+          "path": "config.json",
+          "sha256": "6c352f2d4f542596654cebb149479aeda9b2f050778d407b7b66e36fd9c9b26b",
+          "size": 1333
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0410d30499cd9db0a83ecbd59a2811b1c4f63f7c9412126a43e8d2b96ec44a85",
+          "size": 120
+        },
+        {
+          "path": "model-00001-of-00004.safetensors",
+          "sha256": "2bb697527d3003a96b699366c186e23efecf9af03d882cb2697290213a69a4c3",
+          "size": 4781783376
+        },
+        {
+          "path": "model-00002-of-00004.safetensors",
+          "sha256": "08ae648fc9834efd79266032e797bbc361113dc02d65006d6b49ef18387d2ef3",
+          "size": 4781851248
+        },
+        {
+          "path": "model-00003-of-00004.safetensors",
+          "sha256": "23ec2db0f3aae7982e50d20d7cd600e6d27bde217e4a761a1915196bc9cffc41",
+          "size": 4781851288
+        },
+        {
+          "path": "model-00004-of-00004.safetensors",
+          "sha256": "1bad10b23b66c221c4fb04106315faf6b6d401f9e2d72cb78947063cac1ceb77",
+          "size": 2718054312
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "e9d12315d0bf3d02fcfa0f3ec648c32874c1985746067144d1cd030eb43a2fa1",
+          "size": 28136
+        },
+        {
+          "path": "modeling_plamo.py",
+          "sha256": "498ff5f52b565315325ffff29b6c5e628a55156a4df5cd2bacb48a9c8697f32b",
+          "size": 45413
+        },
+        {
+          "path": "special_tokens_map.json",
+          "sha256": "1004b03ad5c184693765d25d8d682e831727b43b84e321fc9dc14d9ef3d1466a",
+          "size": 587
+        },
+        {
+          "path": "tokenization_plamo.py",
+          "sha256": "68b769d516541603857ce9d2813e48193efe41abb64c1091311b973d491724d9",
+          "size": 22389
+        },
+        {
+          "path": "tokenizer.jsonl",
+          "sha256": "bdce9e430e65931b28c56de2054f52b4cf8ed59b322db125e016d724d06dbb0e",
+          "size": 3526723
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "5468ed5c68b5cf4cf971bcb34be6bfbfd749fe30cc5bc65ace5835ae3bff65b3",
+          "size": 1575
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-31b-gguf-q4-k-m",
+      "label": "PLaMo 3 Translate 31B Q4_K_M",
+      "family": "plamo3",
+      "parameter_size": "31B",
+      "quantization": "Q4_K_M",
+      "bits": 4,
+      "runtime": "llama.cpp",
+      "inference_backends": [
+        "llama.cpp"
+      ],
+      "format": "gguf",
+      "repo": "pfnet/plamo-3-translate-31b-GGUF",
+      "revision": "d0df961b923db3ff9fc325f4410d6f09005afcd6",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "c9139ab4d8be258257f56c6ce6a0b4848f812fe495a86657c1e139d6b0d5819a",
+          "size": 6339
+        },
+        {
+          "path": "plamo-3-translate-31b-Q4_K_M.gguf",
+          "sha256": "d1ed08149f888ef7a0da38e26bf394a13d0f079b592229c8778f5f1a91cf6457",
+          "size": 19526583392
+        }
+      ]
+    },
+    {
+      "id": "plamo-3-translate-31b-bf16",
+      "label": "PLaMo 3 Translate 31B BF16",
+      "family": "plamo3",
+      "parameter_size": "31B",
+      "quantization": "BF16",
+      "bits": 16,
+      "runtime": "vllm",
+      "inference_backends": [
+        "vllm"
+      ],
+      "format": "safetensors",
+      "repo": "pfnet/plamo-3-translate-31b",
+      "revision": "01eac57bf80ef8114decd998f8f3a803ba795557",
+      "context_size": 32768,
+      "license": "plamo-community-license",
+      "files": [
+        {
+          "path": "LICENSE.plamo.txt",
+          "sha256": "d9979039b8f1a96fa81e1be61c4550d06f8542b25119e3f765c7c011a68597fb",
+          "size": 7629,
+          "source_path": "LICENSE/en"
+        },
+        {
+          "path": "chat_template.jinja",
+          "sha256": "cd49e7e0dfa8ec847c163db88dfca89b280dddbb73ddc60ba38c62a420eaced2",
+          "size": 5206
+        },
+        {
+          "path": "config.json",
+          "sha256": "71e5291042196a244c62cdf23b0f0828048ebe46e3624f7b9e5a7c520d464999",
+          "size": 1332
+        },
+        {
+          "path": "generation_config.json",
+          "sha256": "0410d30499cd9db0a83ecbd59a2811b1c4f63f7c9412126a43e8d2b96ec44a85",
+          "size": 120
+        },
+        {
+          "path": "model-00001-of-00014.safetensors",
+          "sha256": "30584dbaa9f82887c6e9e4a8fd935444a09d664e5e17a03d1a5e5b6d68d3f889",
+          "size": 4739692736
+        },
+        {
+          "path": "model-00002-of-00014.safetensors",
+          "sha256": "d4c046da3e291feb91c0520301168e85526559fba52650e1843e8e1746379336",
+          "size": 4876091696
+        },
+        {
+          "path": "model-00003-of-00014.safetensors",
+          "sha256": "d4aa8bf4b6416e58421b1f179681fddbb2eed1be269915e8ac3f38ea67a15f0c",
+          "size": 4876091712
+        },
+        {
+          "path": "model-00004-of-00014.safetensors",
+          "sha256": "ac6ad18d4c389b25f122eb3c6b5ee96d5e1116842f7da1d5c86e8e9e9df13b10",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00005-of-00014.safetensors",
+          "sha256": "7ac73e33a9cb5c8033847f61a898a0588cceb85853cd516c95c431b9c1720eea",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00006-of-00014.safetensors",
+          "sha256": "5941a69168493348758becbabc1d222d66d8993db78e0bf287a477144e0fa7be",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00007-of-00014.safetensors",
+          "sha256": "6f96af74bf24cf6e7972c2d8a9c870a7cc87216b17d5d7a299d7119b922539ec",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00008-of-00014.safetensors",
+          "sha256": "70fc82bf492e1f218be4075a4fe5d89767a1644a56a11e1cce30ea28185be295",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00009-of-00014.safetensors",
+          "sha256": "97285fa501b90b73ee37d87a6718804dd2fa05e1eb5a00f00fafc9f39d48a0b0",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00010-of-00014.safetensors",
+          "sha256": "119462a070dd3e6ff37b8812d376bb3789f1cb2a7c05cd56522855ee88400b65",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00011-of-00014.safetensors",
+          "sha256": "dde3635b819d9074c71d29ae6b3c3b13e91830d72a472af5c33c864c65227f34",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00012-of-00014.safetensors",
+          "sha256": "f220ab0f381304232c3661624ea20271145e8e0728dedbb962e38c4f1a6a01bf",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00013-of-00014.safetensors",
+          "sha256": "d2dedc5baba3e19c26b16fe9b093294a578d4f1ce59ca686cdb1776a557835be",
+          "size": 4876091744
+        },
+        {
+          "path": "model-00014-of-00014.safetensors",
+          "sha256": "feff4f9ddb6c37de03c95612e1ec9282f007ea379648796d07cdc9114eff9989",
+          "size": 262195904
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "sha256": "579d90e84567a5d8247f3242845c7dae9a9f9cbda0a16f3162f7bd4459ff08c1",
+          "size": 56015
+        },
+        {
+          "path": "modeling_plamo.py",
+          "sha256": "498ff5f52b565315325ffff29b6c5e628a55156a4df5cd2bacb48a9c8697f32b",
+          "size": 45413
+        },
+        {
+          "path": "special_tokens_map.json",
+          "sha256": "1004b03ad5c184693765d25d8d682e831727b43b84e321fc9dc14d9ef3d1466a",
+          "size": 587
+        },
+        {
+          "path": "tokenization_plamo.py",
+          "sha256": "68b769d516541603857ce9d2813e48193efe41abb64c1091311b973d491724d9",
+          "size": 22389
+        },
+        {
+          "path": "tokenizer.jsonl",
+          "sha256": "bdce9e430e65931b28c56de2054f52b4cf8ed59b322db125e016d724d06dbb0e",
+          "size": 3526723
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "5468ed5c68b5cf4cf971bcb34be6bfbfd749fe30cc5bc65ace5835ae3bff65b3",
+          "size": 1575
+        }
+      ]
+    }
+  ]
+}

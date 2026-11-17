@@ -1,0 +1,37 @@
+"""Implementation prerequisites only, not live product acceptance."""
+import hashlib
+import json
+from pathlib import Path
+import unittest
+from packages.seed.legacy import checked_release, omitted_adaptations
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class FrozenContractTests(unittest.TestCase):
+    def test_all_reference_bytes_match_allowlist(self):
+        manifest = json.loads((ROOT / "res/reference/reference-files.sha256.json").read_text(encoding="utf-8-sig"))
+        omitted = omitted_adaptations(checked_release(allow_omitted_adaptations=True))
+        self.assertGreater(len(manifest), 20)
+        for relative, expected in manifest.items():
+            with self.subTest(path=relative):
+                path = ROOT / 'res' / relative
+                if relative in omitted:
+                    self.assertFalse(path.exists())
+                else:
+                    self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)
+
+    def test_reader_mutation_would_fail_frozen_digest(self):
+        data = (ROOT / "res/reference/reader-v1.css").read_bytes()
+        expected = "51dacbcd96a21214ed83a62cad870a6281eb20db1aa260f3a7d782c58fdd18a8"
+        self.assertEqual(hashlib.sha256(data).hexdigest(), expected)
+        self.assertNotEqual(hashlib.sha256(data + b" ").hexdigest(), expected)
+
+    def test_legacy_pages_are_exactly_two_and_include_pdf_sources(self):
+        manifest = json.loads((ROOT / "res/reference/reference-files.sha256.json").read_text(encoding="utf-8-sig"))
+        self.assertEqual(len([key for key in manifest if key.startswith("reference/legacy/") and key.endswith(".html")]), 2)
+        self.assertEqual(len([key for key in manifest if key.startswith("reference/legacy/source/") and key.endswith(".pdf")]), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,32 @@
+{
+  "sources": [
+    "https://huggingface.co/mlx-community/translategemma-4b-it-4bit/blob/5788ec08c047f3f2e17808101b8d9566ac930d58/chat_template.jinja",
+    "https://huggingface.co/pfnet/plamo-3-translate-2b-GGUF#pfml3-prompt-format"
+  ],
+  "cases": [
+    {
+      "id": "translategemma-script",
+      "family": "translategemma",
+      "source_language": "en",
+      "target_locale": "zh-Hant",
+      "source": "Hello.\n",
+      "prompt": "<bos><start_of_turn>user\nYou are a professional English (en) to Chinese (zh-Hant) translator. Your goal is to accurately convey the meaning and nuances of the original English text while adhering to Chinese grammar, vocabulary, and cultural sensitivities.\nProduce only the Chinese translation, without any additional explanations or commentary. Please translate the following English text into Chinese:\n\n\nHello.<end_of_turn>\n<start_of_turn>model\n"
+    },
+    {
+      "id": "plamo-explicit-source",
+      "family": "plamo3",
+      "source_language": "en",
+      "target_locale": "zh-Hans",
+      "source": "Hello.\n",
+      "prompt": "<|plamo:tag|>dataset<|plamo:msg|>translation<|plamo:tag|>input<|plamo:key|>lang<|plamo:val|>en<|plamo:msg|>Hello.\n<|plamo:tag|>output<|plamo:key|>lang<|plamo:val|>zh-hans<|plamo:msg|>"
+    },
+    {
+      "id": "plamo-detected-source",
+      "family": "plamo3",
+      "source_language": "und",
+      "target_locale": "en",
+      "source": "会議は来週の月曜日に変更されました。",
+      "prompt": "<|plamo:tag|>dataset<|plamo:msg|>translation<|plamo:tag|>input<|plamo:msg|>会議は来週の月曜日に変更されました。<|plamo:tag|>output<|plamo:key|>lang<|plamo:val|>en<|plamo:msg|>"
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+"""Compose parser model preparation. No PDFs, database, provider keys or socket."""
+import os
+from pathlib import Path
+import threading
+import time
+from typing import Literal
+
+import httpx
+from fastapi import FastAPI, HTTPException
+
+from packages.ir import canonical_bytes, safe_path, strict_loads
+from .catalog import download_spec, manifest_id, public_models, vlm_model
+from .download import cache_lock, download
+from .profiles import OXR_PROFILE, PROFILE_IDS, require_available_profile, unavailable_code
+
+CONTROL_URL = 'http://parser-models:8091'
+DMR_URL = 'http://model-runner.docker.internal'
+Backend = Literal['vllm', 'mlx']
+PREPARATION_FAILURE_CODES = frozenset({
+    'PARSER_MODEL_HASH_MISMATCH', 'PARSER_MODEL_PATH', 'PARSER_MODEL_DOWNLOAD_TIMEOUT',
+    'PARSER_DMR_BACKEND_UNAVAILABLE', 'PARSER_DMR_MODEL_MISMATCH',
+    'PARSER_DMR_CONFIGURATION_FAILED',
+    'PARSER_MODEL_ACCESS_REQUIRED', 'PARSER_MODEL_PLUGIN_REQUIRED',
+})
+
+
+def runner_url(value=None):
+    value = (value or os.environ.get('PARSER_DMR_URL') or DMR_URL).rstrip('/')
+    url = httpx.URL(value)
+    if url.scheme not in ('http', 'https') or not url.host or url.userinfo or url.query or url.fragment or url.path != '/':
+        raise ValueError('PARSER_MODEL_RUNNER_URL_INVALID')
+    return value
+
+
+def dmr_flags(model, backend):
+    from packages.resources.models import vllm_fraction
+    # DMR accepts a restricted set of engine flags. Chat-template options belong
+    # to the inference request, where DockerVision already disables thinking.
+    if backend == 'mlx':
+        return []
+    if model['id'] == OXR_PROFILE:
+        # A cold Runner may report healthy before its first GPU sample. Retry
+        # after the telemetry cache expires rather than configuring a fallback
+        # fraction that the parser would reject as soon as the sample recovers.
+        fraction = vllm_fraction(model, fallback=None)
+        for _ in range(2):
+            if fraction is not None:
+                break
+            time.sleep(2)
+            fraction = vllm_fraction(model, fallback=None)
+        if fraction is None:
+            raise ValueError('PARSER_DMR_CONFIGURATION_FAILED')
+    else:
+        fraction = vllm_fraction(model)
+    return ['--gpu-memory-utilization', fraction, '--max-num-seqs', '1', '--max-num-batched-tokens', '2048']
+
+
+def verify_oxr_runtime(client, dmr, model):
+    """Bind the installed plugin and served artifact before model or PDF dispatch."""
+    from packages.local_models.catalog import artifact
+    url = httpx.URL(dmr).copy_with(port=12435, path='/capabilities')
+    try:
+        with client.stream('GET', url, timeout=2) as response:
+            response.raise_for_status()
+            body = bytearray()
+            for chunk in response.iter_bytes(4096):
+                body.extend(chunk)
+                if len(body) > 4096:
+                    raise ValueError('Capability response exceeds its limit')
+        oxr = strict_loads(bytes(body))['oxr']
+        requirements = model['runtime_requirements']
+        if (oxr['model_artifact_id'] == artifact(model)['id']
+                and oxr['vllm_version'] == requirements['vllm_version']
+                and oxr['plugin_revision'] == requirements['plugin_revision']):
+            return oxr['vllm_version']
+    except (httpx.HTTPError, KeyError, TypeError, ValueError):
+        pass
+    raise ValueError('PARSER_MODEL_PLUGIN_REQUIRED')
+
+
+class Manager:
+    def __init__(self, cache, transport=None, dmr=None):
+        self.cache, self.transport, self.dmr = Path(cache), transport, runner_url(dmr)
+        self.states, self.lock = {}, threading.RLock()
+
+    def client(self, timeout=10):
+        return httpx.Client(transport=self.transport or httpx.HTTPTransport(retries=0),
+                            timeout=timeout, trust_env=False, follow_redirects=False)
+
+    def receipt(self, profile, backend):
+        return safe_path(self.cache, f'{profile}-{backend}.json', must_exist=False)
+
+    def state(self, profile, backend='vllm'):
+        code = unavailable_code(profile, backend)
+        if code:
+            return {'status': 'unavailable', 'code': code}
+        if profile == OXR_PROFILE:
+            try:
+                with self.client(timeout=2) as client:
+                    verify_oxr_runtime(client, self.dmr, vlm_model(profile))
+            except ValueError as exc:
+                return {'status': 'unavailable', 'code': str(exc)}
+        with self.lock:
+            value = dict(self.states.get((profile, backend), {}))
+        if value:
+            return value
+        try:
+            ready = strict_loads(self.receipt(profile, backend).read_bytes()).get('manifest_id') == manifest_id(profile)
+        except (OSError, ValueError):
+            ready = False
+        return {'status': 'ready' if ready else 'not_downloaded',
+                'total_bytes': sum(f['size'] for f in download_spec(profile))}
+
+    def prepare(self, profile, backend='vllm'):
+        if profile not in PROFILE_IDS or backend not in ('vllm', 'mlx'):
+            raise ValueError('PARSER_PROFILE_INVALID')
+        require_available_profile(profile, backend)
+        if profile == OXR_PROFILE:
+            with self.client(timeout=2) as client:
+                verify_oxr_runtime(client, self.dmr, vlm_model(profile))
+        with self.lock:
+            key = (profile, backend)
+            if self.states.get(key, {}).get('status') in ('downloading', 'loading'):
+                return dict(self.states[key])
+            # Recheck hashes/configuration on every explicit use, including after restart.
+            self.states[key] = {'status': 'downloading', 'downloaded_bytes': 0,
+                                'total_bytes': sum(f['size'] for f in download_spec(profile))}
+            threading.Thread(target=self._prepare, args=(profile, backend), daemon=True).start()
+            return dict(self.states[key])
+
+    def verify_backend(self, client, backend):
+        response = client.get(self.dmr + '/engines/status')
+        response.raise_for_status()
+        value = response.json().get('vllm', '')
+        expected = 'Running: vllm-metal ' if backend == 'mlx' else 'Running: vllm '
+        if not isinstance(value, str) or not value.startswith(expected):
+            raise ValueError('PARSER_DMR_BACKEND_UNAVAILABLE')
+
+    def prepare_dmr(self, profile, backend, update):
+        require_available_profile(profile, backend)
+        from packages.local_models.catalog import artifact
+        from packages.local_models.download import archive
+        model = vlm_model(profile)
+        ident = artifact(model)['id']
+        root = self.cache / model['repo'].replace('/', '--') / model['revision']
+        update(status='loading')
+        with self.client(timeout=600) as client:
+            self.verify_backend(client, backend)
+            if profile == OXR_PROFILE:
+                verify_oxr_runtime(client, self.dmr, model)
+            response = client.get(self.dmr + '/models/' + ident)
+            if response.status_code == 404:
+                response = client.post(self.dmr + '/models/load', content=archive(model, root),
+                                       headers={'Content-Type': 'application/x-tar'})
+                response.raise_for_status()
+                response = client.get(self.dmr + '/models/' + ident)
+            response.raise_for_status()
+            if response.json().get('id') != ident or response.json().get('config', {}).get('format') != 'safetensors':
+                raise ValueError('PARSER_DMR_MODEL_MISMATCH')
+            try:
+                desired = {'context-size': model['context_size'], 'keep_alive': '30s',
+                           'runtime-flags': dmr_flags(model, backend)}
+                response = client.get(self.dmr + '/engines/_configure', params={'model': ident})
+                response.raise_for_status()
+                configurations = response.json()
+                if not isinstance(configurations, list):
+                    raise ValueError('PARSER_DMR_CONFIGURATION_FAILED')
+                for row in configurations:
+                    if not isinstance(row, dict):
+                        continue
+                    config = row.get('Config')
+                    if (row.get('Backend') == 'vllm' and row.get('ModelID') == ident
+                            and row.get('Mode') == 'completion' and isinstance(config, dict)
+                            and config.get('context-size') == desired['context-size']
+                            and config.get('keep_alive') == desired['keep_alive']
+                            and (config.get('runtime-flags') or []) == desired['runtime-flags']):
+                        # Even an unchanged _configure POST starts DMR's short
+                        # background preload, which can cancel a slow cold start.
+                        return
+                response = client.post(self.dmr + '/engines/vllm/_configure',
+                                       json={'model': ident, **desired})
+                response.raise_for_status()
+            except httpx.HTTPError as exc:
+                # Keep a useful stage-specific code without exposing arbitrary
+                # backend response bodies, paths or exception messages.
+                raise ValueError('PARSER_DMR_CONFIGURATION_FAILED') from exc
+
+    def _prepare(self, profile, backend):
+        started = time.monotonic()
+        def update(**fields):
+            if time.monotonic() - started > 86400:
+                raise ValueError('PARSER_MODEL_DOWNLOAD_TIMEOUT')
+            with self.lock:
+                self.states[(profile, backend)].update(fields)
+        try:
+            require_available_profile(profile, backend)
+            with cache_lock(self.cache):
+                # Do not fetch tens of GB when the selected engine is absent.
+                with self.client() as client:
+                    self.verify_backend(client, backend)
+                    if profile == OXR_PROFILE:
+                        verify_oxr_runtime(client, self.dmr, vlm_model(profile))
+                with self.client(timeout=120) as client:
+                    download(download_spec(profile), self.cache, client, update)
+                self.prepare_dmr(profile, backend, update)
+                receipt = self.receipt(profile, backend)
+                temporary = safe_path(self.cache, receipt.name + '.part', must_exist=False)
+                temporary.write_bytes(canonical_bytes({'manifest_id': manifest_id(profile)}))
+                temporary.replace(receipt)
+                update(status='ready')
+        except Exception as exc:
+            with self.lock:
+                self.states[(profile, backend)].update(status='failed',
+                    code=str(exc) if str(exc) in PREPARATION_FAILURE_CODES else 'PARSER_MODEL_PREPARATION_FAILED')
+
+
+def create_app(cache=None, transport=None, dmr=None):
+    app = FastAPI(docs_url=None, redoc_url=None)
+    manager = Manager(cache or os.environ.get('PARSER_MODEL_CACHE', '/model_cache'), transport, dmr)
+    app.state.manager = manager
+
+    def lookup(profile):
+        if profile not in PROFILE_IDS:
+            raise HTTPException(404, 'PARSER_PROFILE_INVALID')
+
+    @app.get('/health')
+    def health():
+        return {'status': 'ok'}
+
+    @app.get('/resources')
+    def resources():
+        from packages.resources.telemetry import capacity
+        return capacity()
+
+    @app.get('/models')
+    def catalog(backend: Backend = 'vllm'):
+        return {'models': [{**m, **manager.state(m['id'], backend)} for m in public_models(backend)]}
+
+    @app.get('/models/{profile}')
+    def state(profile: str, backend: Backend = 'vllm'):
+        lookup(profile)
+        return manager.state(profile, backend)
+
+    @app.post('/models/{profile}/prepare', status_code=202)
+    def prepare(profile: str, backend: Backend = 'vllm'):
+        lookup(profile)
+        try:
+            return manager.prepare(profile, backend)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    return app
+
+
+app = create_app()

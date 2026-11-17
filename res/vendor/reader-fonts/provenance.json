@@ -1,0 +1,49 @@
+{
+  "source_han_sans": {
+    "repository": "https://github.com/adobe-fonts/source-han-sans",
+    "version": "2.005R",
+    "commit": "6c709ca72d3d7c46ab42ebecc1a26e7d69595a37",
+    "font_path": "Variable/WOFF2/TTF/Subset/SourceHanSansCN-VF.ttf.woff2",
+    "license_path": "LICENSE.txt",
+    "license": "OFL-1.1",
+    "modifications": "None. Adobe's Simplified Chinese regional subset."
+  },
+  "jetbrains_mono": {
+    "repository": "https://github.com/JetBrains/JetBrainsMono",
+    "version": "2.304",
+    "commit": "cd5227bd1f61dff3bbd6c814ceaf7ffd95e947d9",
+    "directory": "fonts/webfonts/",
+    "license": "OFL-1.1",
+    "modifications": "None."
+  },
+  "files": {
+    "JetBrainsMono-Bold.woff2": {
+      "sha256": "c503cc5ec5f8b2c7666b7ecda1adf44bd45f2e6579b2eba0fc292150416588a2",
+      "byte_size": 94588
+    },
+    "JetBrainsMono-BoldItalic.woff2": {
+      "sha256": "3a013466c0eee979fb9d42c2d7a8887cd3645dc8b897cfc5b71781cf982efc5a",
+      "byte_size": 98152
+    },
+    "JetBrainsMono-Italic.woff2": {
+      "sha256": "cb6a1b246318ed3885d7dffa14a2609297fe80e9b8e500bea33b52fa312a36a4",
+      "byte_size": 95864
+    },
+    "JetBrainsMono-OFL.txt": {
+      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad",
+      "byte_size": 4399
+    },
+    "JetBrainsMono-Regular.woff2": {
+      "sha256": "a9cb1cd82332b23a47e3a1239d25d13c86d16c4220695e34b243effa999f45f2",
+      "byte_size": 92164
+    },
+    "SourceHanSans-OFL.txt": {
+      "sha256": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2",
+      "byte_size": 4463
+    },
+    "SourceHanSansCN-VF.ttf.woff2": {
+      "sha256": "f971e3bff46f76b49e1d5510556c2297c618ec4b491a295a4e741cdd38257799",
+      "byte_size": 7711988
+    }
+  }
+}

@@ -1,0 +1,106 @@
+"""Compose maintenance-only seeds: two release-known pages, never arbitrary HTML."""
+import base64
+import hashlib
+import mimetypes
+import re
+from pathlib import Path
+from sqlalchemy import select
+from packages.domain.db import lock_singleton,writable
+from packages.domain.errors import require
+from packages.domain.models import SourceAsset,Document,Edition,Artifact,Publication
+from packages.ir import canonical_bytes,digest,strict_loads
+from packages.publisher import verify_artifact
+from packages.storage import atomic_write,safe_path
+
+from packages.paths import ROOT, RESOURCE_ROOT
+from .legal import checked_legal, with_attribution
+RELEASE_MANIFEST_HASH='b7320b3615c304ce45de8bce2ebfffc9fc552642d53a8fd661ea14a2b12875f3'
+OMISSION_NOTICE = 'reference/legacy/ADAPTATIONS_OMITTED.md'
+
+
+def omitted_adaptations(release):
+    if not safe_path(RESOURCE_ROOT, OMISSION_NOTICE).is_file():
+        return set()
+    originals = {item['source_path'] for item in release['documents']}
+    adaptations = {entry['path'] for item in release['documents'] for entry in item['files']} - originals
+    for relative in adaptations:
+        if safe_path(RESOURCE_ROOT, relative).exists():
+            return set()
+    return adaptations
+
+
+def checked_release(*, allow_omitted_adaptations=False):
+    release=strict_loads((ROOT/'res/reference/legacy-manifest.json').read_bytes())
+    require(digest(release)==RELEASE_MANIFEST_HASH,'LEGACY_MANIFEST_INVALID')
+    reference=strict_loads((ROOT/'res/reference/reference-files.sha256.json').read_bytes())
+    require(len(release['documents'])==2 and {d['id'] for d in release['documents']}=={'legacy-efficient','legacy-pathways'},'LEGACY_MANIFEST_INVALID')
+    omitted = omitted_adaptations(release)
+    for item in release['documents']:
+        outputs={entry['output']:entry for entry in item['files']}
+        require(len(outputs)==len(item['files']) and outputs.get('legacy-original.html',{}).get('path')==item['html_path']
+            and outputs.get(item['source_output'],{}).get('path')==item['source_path'],'LEGACY_MANIFEST_INVALID')
+        for entry in item['files']:
+            require(reference.get(entry['path'])==entry['sha256'],'LEGACY_HASH_NOT_ALLOWED')
+            if entry['path'] not in omitted:
+                file=safe_path(RESOURCE_ROOT,entry['path'],must_exist=True)
+                require(digest(file.read_bytes())==entry['sha256'],'LEGACY_HASH_MISMATCH')
+    css=(ROOT/'res/reference/reader-v1.css').read_bytes()
+    require(digest(css)==release['reader_css_sha256']==reference['reference/reader-v1.css'],'TEMPLATE_HASH_MISMATCH')
+    require(allow_omitted_adaptations or not omitted, 'LEGACY_SEED_BUNDLE_NOT_INCLUDED',
+            'This source snapshot omits the optional bilingual seed bundle. The original PDFs can be uploaded normally.')
+    return release
+
+
+def seed_legacy(db,cfg):
+    release=checked_release();created=0;outcomes=[];legal=None
+    for item in release['documents']:
+        with db.transaction() as session:
+            writable(session);lock_singleton(session)
+            previous=session.get(Document,item['id'])
+            if previous:
+                outcomes.append({'document_id':previous.id,'status':'deleted' if previous.deleted_at else 'already_seeded'})
+                continue
+            if legal is None:
+                legal=checked_legal(release)
+            files={}
+            for entry in item['files']:
+                content=safe_path(RESOURCE_ROOT,entry['path'],must_exist=True).read_bytes()
+                require(digest(content)==entry['sha256'],'LEGACY_HASH_MISMATCH')
+                files[entry['output']]=content
+            original=files['legacy-original.html']
+            before,after=release['navigation_patch']['from'].encode(),release['navigation_patch']['to'].encode()
+            require(original.count(before)==1,'LEGACY_NAVIGATION_MISMATCH')
+            page=original.replace(before,after,1)
+            page,legal_files=with_attribution(page,item,legal)
+            files.update(legal_files)
+            files['index.html']=page;files['reader.css']=(ROOT/'res/reference/reader-v1.css').read_bytes()
+            script_hashes=[base64.b64encode(hashlib.sha256(script).digest()).decode() for script in re.findall(rb'<script[^>]*>(.*?)</script>',page,re.S)]
+            csp="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src "+' '.join("'sha256-"+h+"'" for h in script_hashes)+"; connect-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'"
+            manifest={'schema_version':'1.0','legacy':True,'mode':'release','document_id':item['id'],'target_locale':'zh-Hans',
+                'template_id':'reader-v1','template_sha256':release['reader_css_sha256'],'renderer_version':'legacy-copy-v2','renderer_sha256':digest(Path(__file__).read_bytes()+Path(__file__).with_name('legal.py').read_bytes()),
+                'source_snapshot_hash':None,'translation_snapshot_hash':None,'qa_fingerprint':None,'include_source':True,
+                'original_pdf_path':item['source_output'],'legacy_source_path':item['html_path'],'legacy_original_sha256':digest(original),
+                'navigation_patch':release['navigation_patch'],'content_security_policy':csp,
+                'notice':'Legacy curated reading; no precise block provenance or certified source/translation alignment. Original page notice retained.',
+                'files':[{'path':name,'byte_size':len(content),'sha256':digest(content),'media_type':mimetypes.guess_type(name)[0] or 'application/octet-stream'} for name,content in sorted(files.items())]}
+            manifest['content_digest']=digest(manifest['files'])
+            aid=item['id']+'-artifact-v2';key=f'documents/{item["id"]}/artifacts/{aid}'
+            for name,content in files.items():atomic_write(cfg.data,key+'/'+name,content)
+            atomic_write(cfg.data,key+'/manifest.json',canonical_bytes(manifest))
+            verify_artifact(safe_path(cfg.data,key))
+            pdf=files[item['source_output']];pdf_sha=digest(pdf)
+            asset=session.scalar(select(SourceAsset).where(SourceAsset.sha256==pdf_sha))
+            if asset is None:
+                asset_id=item['id']+'-source';source_key=f'sources/{asset_id}/original.pdf'
+                atomic_write(cfg.data,source_key,pdf)
+                asset=SourceAsset(id=asset_id,sha256=pdf_sha,byte_size=len(pdf),page_count=item['page_count'],storage_key=source_key)
+                session.add(asset);session.flush()
+            document=Document(id=item['id'],title=item['title'],source_asset_id=asset.id,source_language='en',status='published')
+            session.add(document);session.flush()
+            edition=Edition(id=item['id']+'-zh-Hans',document_id=document.id,target_locale='zh-Hans',generation=2,current_artifact_id=aid)
+            session.add(edition);session.flush()
+            artifact=Artifact(id=aid,document_id=document.id,edition_id=edition.id,source_revision_id=None,translation_revision_id=None,template_id='reader-v1',storage_key=key,manifest_hash=digest(manifest),state='verified',legacy=True)
+            session.add(artifact);session.flush()
+            session.add(Publication(id=item['id']+'-initial-publication',edition_id=edition.id,artifact_id=aid,generation=2,operation='seed_legacy',origin='migration'))
+            outcomes.append({'document_id':document.id,'artifact_id':aid,'status':'seeded','legacy':True});created+=1
+    return {'created':created,'documents':outcomes}

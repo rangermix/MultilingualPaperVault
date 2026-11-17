@@ -1,0 +1,4 @@
+# PEP 517 dependencies of the pinned mlx-lm and mlx-vlm archives.
+setuptools>=80
+setuptools-scm>=9
+wheel

@@ -1,0 +1,267 @@
+import { t, formatList } from '../i18n';
+import { useRef, useState } from 'react';
+import { api, ApiError, etagFor } from '../api';
+import { ErrorNotice, Loading } from '../components';
+import type { Provider, ProviderPrice } from '../types';
+import { costControlEnabled, defaultTokenLimits } from './cost-control';
+import { providerProtocols } from './provider-protocol';
+import { ProviderConnection } from './provider-connection';
+import { DispatchRecovery } from './dispatch-settings';
+import { LocalModels } from './local-models';
+import { useSettingsForm, useSettingsRefresh } from './settings-state';
+import { TranslationLanguageSettings, type TranslationLanguageSettingsProps } from './translation-language-settings';
+
+type Fields = {
+  endpoint: string; protocol: NonNullable<Provider['api_protocol']>; auth: NonNullable<Provider['auth_mode']>;
+  model: string; backend: string; version: string; inputPrice: string; cachedPrice: string; outputPrice: string;
+  costControl: boolean; inputTokens: string; outputTokens: string; unitCharacters: string; includesReasoning: boolean;
+};
+type Draft = { fields: Fields; apiKey: string; clearKey: boolean };
+const dollar = (value?: number | null) => value == null ? '' : String(value / 1_000_000);
+const missingLabels: Record<string, string> = {
+  endpoint: '完整请求地址', model_id: '模型 ID', api_key: 'API 密钥', api_protocol: '接口类型', auth_mode: '鉴权方式', api_version: 'Anthropic API 版本',
+  max_input_tokens: '输入 token 上限', max_output_tokens: '输出 token 上限', max_unit_characters: '单元字符上限',
+  price: '实际计费价格', 'price.input_micro_per_million': '输入价格', 'price.cached_input_micro_per_million': '缓存输入价格',
+  'price.output_micro_per_million': '输出价格', 'price.output_includes_reasoning': '推理 token 计费确认',
+  'price.currency': 'USD 计费币种', 'price.input_bound_rule': '输入用量计费口径',
+};
+const fromProvider = (value: Provider): Fields => ({
+  endpoint: value.endpoint ?? '', protocol: value.api_protocol ?? 'responses', auth: value.auth_mode ?? providerProtocols[value.api_protocol ?? 'responses'].auth,
+  model: value.model_id ?? '', backend: value.local_backend ?? '', version: value.api_version ?? (value.api_protocol === 'claude_messages' ? '2023-06-01' : ''), costControl: costControlEnabled(value), inputPrice: dollar(value.price?.input_micro_per_million),
+  cachedPrice: dollar(value.price?.cached_input_micro_per_million), outputPrice: dollar(value.price?.output_micro_per_million),
+  inputTokens: String(value.max_input_tokens ?? value.token_limits_defaults?.max_input_tokens ?? defaultTokenLimits.max_input_tokens),
+  outputTokens: String(value.max_output_tokens ?? value.token_limits_defaults?.max_output_tokens ?? defaultTokenLimits.max_output_tokens),
+  unitCharacters: String(value.max_unit_characters ?? value.token_limits_defaults?.max_unit_characters ?? defaultTokenLimits.max_unit_characters), includesReasoning: value.price?.output_includes_reasoning === true,
+});
+function defaultsFor(protocol: Fields['protocol'], base: Provider, auth: Fields['auth']): Fields {
+  const selected = providerProtocols[protocol];
+  return fromProvider({ configured: false, token_limits_defaults: base.token_limits_defaults,
+    api_protocol: protocol, endpoint: selected.defaultEndpoint, model_id: selected.defaultModel,
+    auth_mode: protocol === 'local_translation' ? 'none' : auth === 'none' ? 'none' : selected.auth,
+    api_version: protocol === 'claude_messages' ? '2023-06-01' : undefined,
+    cost_control_enabled: false, price: undefined,
+    ...(protocol === 'local_translation' ? { max_input_tokens: 6144, max_output_tokens: 2048, max_unit_characters: 1500 } : {}),
+  });
+}
+// Decimal strings avoid rounding away a micro-dollar during the UI conversion.
+function micro(value: string): number | undefined {
+  if (!value) return undefined;
+  if (!/^\d+(?:\.\d{1,6})?$/.test(value)) return NaN;
+  const [whole, fraction = ''] = value.split('.');
+  const integer = BigInt(whole) * 1_000_000n + BigInt(fraction.padEnd(6, '0'));
+  return integer <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(integer) : NaN;
+}
+function endpointInvalid(value: string) {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return !['http:', 'https:'].includes(url.protocol) || !url.hostname || !!url.username || !!url.password
+      || /[\s\\?#]/.test(value) || !url.pathname || url.pathname === '/' || url.port === '0';
+  } catch { return true; }
+}
+function tokenInvalid(value: string, max: number) {
+  return (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > max);
+}
+function saveError(reason: unknown) {
+  const original = reason instanceof ApiError ? reason : undefined;
+  const code = original?.code ?? 'PROVIDER_SAVE_FAILED';
+  const message = original?.status === 412 ? '配置版本已变化。请刷新配置并比较，当前非密钥输入已保留。'
+    : code === 'PROVIDER_KEY_REBIND_REQUIRED' ? '服务地址或接口类型已变化，请重新输入密钥或明确清除已保存的密钥。'
+    : code === 'PROVIDER_KEY_REQUIRED' ? '后端无法沿用外部密钥。请重新输入密钥，或明确清除后先保存未完成配置。'
+    : original?.status === 0 ? '连接中断，保存结果尚不确定。请刷新配置后再决定是否保存。'
+    : original?.status === 409 ? '配置暂不能保存。请读取最新状态并核对配置。'
+    : '配置未能保存，请检查服务地址、模型、价格和请求限制。输入的密钥已从表单清空。';
+  // Never copy a server validation message/details that could echo a credential.
+  return new ApiError(original?.status ?? 0, /^[A-Z0-9_]+$/.test(code) ? code : 'PROVIDER_SAVE_FAILED', message);
+}
+
+export function ProviderSettings({ provider, loading, error, reload, onSaved, onDispatchSaved, languagePreferences }: {
+  provider?: Provider; loading: boolean; error?: Error; reload: () => void; onSaved: (value: Provider) => void; onDispatchSaved?: () => void;
+  languagePreferences?: TranslationLanguageSettingsProps;
+}) {
+  return <section className="panel provider-panel" aria-labelledby="provider-title">
+    <h2 id="provider-title">{t("AI 服务")}</h2>
+    <DispatchRecovery onSaved={onDispatchSaved}/>
+    <ErrorNotice error={error} retry={reload}/>
+    {loading && <Loading/>}
+    {provider && !error && <ProviderForm initial={provider} onSaved={onSaved} languagePreferences={languagePreferences}/>}
+  </section>;
+}
+
+function ProviderForm({ initial, onSaved, languagePreferences }: { initial: Provider; onSaved: (value: Provider) => void; languagePreferences?: TranslationLanguageSettingsProps }) {
+  const [base, setBase] = useState(initial);
+  const [fields, setFields] = useState(() => fromProvider(initial));
+  const [drafts, setDrafts] = useState<Partial<Record<Fields['protocol'], Draft>>>({});
+  const [apiKey, setApiKey] = useState('');
+  const [clearKey, setClearKey] = useState(false);
+  const [localModelAvailable, setLocalModelAvailable] = useState(false);
+  const [languageChoice, setLanguageChoice] = useState<string>();
+  const [languagePending, setLanguagePending] = useState(false);
+  const languageSaving = useRef(false);
+  function setLanguageSavePending(value: boolean) {
+    languageSaving.current = value;
+    setLanguagePending(value);
+  }
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<ApiError>();
+  const [notice, setNotice] = useState('');
+  const [refreshRequired, setRefreshRequired] = useState(false);
+  const [latest, setLatest] = useState<Provider>();
+  const [loadedVersion, setLoadedVersion] = useState(0);
+  const running = useRef(false);
+  const update = <K extends keyof Fields>(key: K, value: Fields[K]) => {
+    setFields(old => ({ ...old, [key]: value })); setNotice('');
+  };
+  const protocol = providerProtocols[fields.protocol];
+  const local = fields.protocol === 'local_translation';
+  function storedFor(value: Fields['protocol']): Provider | undefined {
+    if ((base.api_protocol ?? 'responses') === value) return base;
+    return base.saved_profiles?.[value] ?? (base.previous_external?.api_protocol === value ? base.previous_external : undefined);
+  }
+  function changeProtocol(value: Fields['protocol']) {
+    if (languageSaving.current || value === fields.protocol) return;
+    setDrafts(old => ({ ...old, [fields.protocol]: { fields, apiKey, clearKey } }));
+    const saved = storedFor(value);
+    const next = drafts[value] ?? { fields: saved ? fromProvider(saved) : defaultsFor(value, base, fields.auth), apiKey: '', clearKey: false };
+    setFields(next.fields); setApiKey(next.apiKey); setClearKey(next.clearKey); setNotice('');
+  }
+  const credentialSource = storedFor(fields.protocol) ?? base;
+  const rebind = credentialSource.has_api_key !== false && (fields.endpoint.trim() !== (credentialSource.endpoint ?? '')
+    || fields.protocol !== (credentialSource.api_protocol ?? 'responses') || fields.auth !== (credentialSource.auth_mode ?? 'bearer'));
+  const mustRebind = !local && rebind && !apiKey && !clearKey;
+  const invalidUrl = endpointInvalid(fields.endpoint.trim());
+  const invalidPrice = !local && [fields.inputPrice, fields.cachedPrice, fields.outputPrice].some(value => Number.isNaN(micro(value)));
+  const invalidTokens = tokenInvalid(fields.inputTokens, 1_000_000) || tokenInvalid(fields.outputTokens, 1_000_000) || tokenInvalid(fields.unitCharacters, 10_000);
+  const invalidKey = /[\r\n]/.test(apiKey) || apiKey.length > 8192;
+  const invalidVersion = fields.protocol === 'claude_messages' && fields.version !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(fields.version);
+  const canSave = !pending && !refreshRequired && !latest && !mustRebind && !invalidUrl && !invalidPrice && !invalidTokens && !invalidKey && !invalidVersion && (!local || (!!fields.model && localModelAvailable)) && !!etagFor(base);
+  function applyLatest(value: Provider, keepInput: boolean, savedActive = false) {
+    if (languageSaving.current) return;
+    setLoadedVersion(version => version + 1);
+    setBase(value); onSaved(value); setLatest(undefined); setRefreshRequired(false); setError(undefined); setApiKey('');
+    if (!keepInput) {
+      setFields(fromProvider(value)); setClearKey(false);
+      setDrafts(old => { if (!savedActive) return {}; const next = { ...old }; delete next[fields.protocol]; return next; });
+    }
+    else setDrafts(old => Object.fromEntries(Object.entries(old).map(([name, draft]) => [name, { ...draft, apiKey: '' }])));
+  }
+  async function readLatest() {
+    if (languageSaving.current || running.current) return;
+    running.current = true; setPending(true); setApiKey(''); setNotice('');
+    setDrafts(old => Object.fromEntries(Object.entries(old).map(([name, draft]) => [name, { ...draft, apiKey: '' }])));
+    try { setLatest(await api<Provider>('/settings/provider')); }
+    catch (reason) { setError(saveError(reason)); }
+    finally { running.current = false; setPending(false); }
+  }
+  async function save() {
+    if (languageSaving.current || !canSave || running.current) return false;
+    running.current = true; setPending(true); setNotice(''); setError(undefined);
+    const price: ProviderPrice = { currency: 'USD', input_bound_rule: 'utf8-byte-ceiling-v1' };
+    if (fields.inputPrice !== '') price.input_micro_per_million = micro(fields.inputPrice);
+    if (fields.cachedPrice !== '') price.cached_input_micro_per_million = micro(fields.cachedPrice);
+    if (fields.outputPrice !== '') price.output_micro_per_million = micro(fields.outputPrice);
+    if (fields.includesReasoning) price.output_includes_reasoning = true;
+    const hasPrice = !!fields.inputPrice || !!fields.cachedPrice || !!fields.outputPrice || fields.includesReasoning;
+    const profile = {
+      provider: protocol.provider, endpoint: fields.endpoint.trim(), api_protocol: fields.protocol, auth_mode: fields.auth, model_id: fields.model.trim(),
+      ...(local && fields.backend ? { local_backend: fields.backend } : {}),
+      ...(fields.protocol === 'claude_messages' && fields.version ? { api_version: fields.version } : {}),
+      cost_control_enabled: local ? false : fields.costControl, enabled_pairs: base.enabled_pairs ?? [], semantic_review_enabled: local ? false : base.semantic_review_enabled ?? false,
+      ...(fields.inputTokens !== '' ? { max_input_tokens: Number(fields.inputTokens) } : {}),
+      ...(fields.outputTokens !== '' ? { max_output_tokens: Number(fields.outputTokens) } : {}),
+      ...(fields.unitCharacters !== '' ? { max_unit_characters: Number(fields.unitCharacters) } : {}),
+      ...(!local && hasPrice ? { price } : {}),
+    };
+    const key = !local && fields.auth !== 'none' ? apiKey : '';
+    setApiKey('');
+    setDrafts(old => ({ ...old, [fields.protocol]: { fields, apiKey: '', clearKey } }));
+    try {
+      const value = await api<Provider>('/settings/provider', { method: 'PUT', etag: etagFor(base),
+        body: { profile, ...(key ? { api_key: key } : {}), ...(!local && clearKey ? { clear_api_key: true } : {}) } });
+      applyLatest(value, false, true);
+      setNotice(local ? '本地模型配置已保存。' : value.configured && value.dispatch_configuration_ready !== false ? 'AI 服务配置已保存，可测试连接。'
+        : 'AI 服务配置已保存，仍等待配置。请补全缺失字段。');
+      return true;
+    } catch (reason) {
+      const safe = saveError(reason); setError(safe);
+      if ([0, 409, 412].includes(safe.status)) setRefreshRequired(true);
+      return false;
+    } finally { running.current = false; setPending(false); }
+  }
+  const credentialLabel = credentialSource.config_source === 'external' && credentialSource.has_api_key == null ? '外部密钥状态未核验'
+    : credentialSource.has_api_key === true && storedFor(fields.protocol) ? '已保存密钥' : '未保存密钥';
+  const latestFields = latest ? fromProvider(latest) : undefined;
+  const latestProtocol = latest?.api_protocol ? providerProtocols[latest.api_protocol] : undefined;
+  const latestAuth = latest?.auth_mode === 'none' ? t('无鉴权') : latest?.auth_mode === 'bearer' ? t('Bearer 密钥')
+    : latest?.auth_mode === 'api_key' ? t('API 密钥（{kind}）', { kind: latestProtocol?.keyLabel ?? 'api_key' }) : t('未提供');
+  const ready = base.configured && base.dispatch_configuration_ready !== false;
+  const dirty = JSON.stringify(fields) !== JSON.stringify(fromProvider(base)) || !!apiKey || clearKey;
+  const unsaved = dirty || Object.entries(drafts).some(([name, draft]) => {
+    const selected = name as Fields['protocol'];
+    const saved = storedFor(selected);
+    return !!draft && (JSON.stringify(draft.fields) !== JSON.stringify(saved ? fromProvider(saved) : defaultsFor(selected, base, draft.fields.auth))
+      || !!draft.apiKey || draft.clearKey);
+  });
+  const otherDrafts = Object.entries(drafts).some(([name, draft]) => {
+    if (name === fields.protocol || !draft) return false;
+    const selected = name as Fields['protocol'];
+    const saved = storedFor(selected);
+    return JSON.stringify(draft.fields) !== JSON.stringify(saved ? fromProvider(saved) : defaultsFor(selected, base, draft.fields.auth))
+      || !!draft.apiKey || draft.clearKey;
+  });
+  useSettingsForm('provider', { label: '翻译服务', dirty: unsaved, pending: pending || languagePending, canSave: canSave && !otherDrafts, save,
+    discard: () => { applyLatest(base, false); setNotice(''); } });
+  const refresh = useSettingsRefresh(unsaved, readLatest, true);
+  return <form className="provider-form" onSubmit={event => { event.preventDefault(); void save(); }} autoComplete="off">
+    <div className="provider-state stack"><span className={ready ? 'provider-ready' : 'muted'}>{ready ? (base.connection_test ? t("已配置 · 测试结果见下方") : t("已配置 · 未测试")) : t("等待配置")}</span>{unsaved && <span className="settings-unsaved">{t("未保存")}</span>}</div>
+    {otherDrafts && <p className="settings-hint">{t("其他接口还有未保存的输入。请切换到对应接口处理；保存当前接口不会自动保存或启用其他服务。")}</p>}
+    {base.missing_fields?.length ? <p className="field-note">{t("待补全：")}{formatList([...new Set(base.missing_fields.map(field => t(missingLabels[field] ?? '其他服务配置（请检查高级选项）')))])}</p> : null}
+    <fieldset disabled={pending || languagePending} className="provider-fields">
+      <div className={local ? 'provider-interface' : 'two-cols'}>
+        <label className="field">{t("接口类型")}<select aria-label={t("接口类型")} value={fields.protocol} onChange={event => changeProtocol(event.target.value as Fields['protocol'])}>{Object.entries(providerProtocols).map(([value, entry]) => <option key={value} value={value}>{t(entry.label)}</option>)}</select></label>
+        {!local && <label className="field">{t("鉴权方式")}<select aria-label={t("鉴权方式")} value={fields.auth} onChange={event => { update('auth', event.target.value as Fields['auth']); setApiKey(''); }}><option value={protocol.auth}>{t("API 密钥（{kind}）", { kind: t(protocol.keyLabel) })}</option><option value="none">{t("无鉴权（本地或无需密钥的服务）")}</option></select></label>}
+      </div>
+      <LocalModels value={local ? fields.model : drafts.local_translation?.fields.model ?? storedFor('local_translation')?.model_id ?? ''}
+        backend={local ? fields.backend : drafts.local_translation?.fields.backend ?? storedFor('local_translation')?.local_backend ?? ''}
+        onChange={(model, backend) => { setFields(old => ({ ...old, model, backend })); setNotice(''); }} active={local} onAvailabilityChange={setLocalModelAvailable}
+        renderTargetLanguage={languagePreferences && local ? (supported, match) => <TranslationLanguageSettings {...languagePreferences} choice={languageChoice} onChoiceChange={setLanguageChoice} onPendingChange={setLanguageSavePending} supportedLanguages={supported} targetLanguageMatch={match} disabled={pending || supported === undefined}/> : undefined}/>
+      {!local && <>
+      <label className="field">{t("完整请求 URL")}<input className="input" type="url" value={fields.endpoint} onChange={event => { update('endpoint', event.target.value); setApiKey(''); }} maxLength={2048} placeholder={protocol.defaultEndpoint} autoCapitalize="none" spellCheck={false}/></label>
+      {invalidUrl && <p className="field-note error-text">{t("请输入包含接口路径的 HTTP(S) 地址，不含鉴权信息、查询参数或片段。")}</p>}
+      <div className="model-language-row"><label className="field">{t("模型 ID")}<input className="input" value={fields.model} onChange={event => update('model', event.target.value)} maxLength={160} placeholder={t("服务实际提供的模型 ID")} autoCapitalize="none" spellCheck={false}/></label>
+        {languagePreferences && <TranslationLanguageSettings {...languagePreferences} choice={languageChoice} onChoiceChange={setLanguageChoice} onPendingChange={setLanguageSavePending} supportedLanguages={fields.model.trim() === storedFor(fields.protocol)?.model_id ? storedFor(fields.protocol)?.supported_target_languages : null} targetLanguageMatch={fields.model.trim() === storedFor(fields.protocol)?.model_id ? storedFor(fields.protocol)?.target_language_match : undefined} disabled={pending}/>}
+      </div>
+      <label className="field">{t("API 密钥")}<input className="input" type="password" value={apiKey} onChange={event => { setApiKey(event.target.value); setNotice(''); }} disabled={clearKey || fields.auth === 'none'} autoComplete="new-password" autoCapitalize="none" spellCheck={false} maxLength={8192} placeholder={t("留空保留现有密钥")}/></label>
+      <div className="provider-key-state"><span className="small muted">{t(credentialLabel)}</span><label className="check"><input type="checkbox" checked={clearKey} onChange={event => { setClearKey(event.target.checked); setApiKey(''); setNotice(''); }}/>{t("清除已保存的密钥")}</label></div>
+      {rebind && <p className="notice">{t("服务地址或接口类型已变化，或已切换鉴权方式。请重新输入用于新配置的密钥，或明确清除已保存的密钥；旧密钥不会自动绑定到新配置。")}</p>}
+      <div className="provider-cost"><label className="check"><input type="checkbox" checked={fields.costControl} onChange={event => update('costControl', event.target.checked)}/>{t("启用预算与成本控制")}</label></div>
+      </>}
+      <details className="provider-advanced"><summary>{t("高级选项：价格与请求限制")}</summary>
+        {fields.protocol === 'claude_messages' && <><label className="field">{t("Anthropic API 版本")}<input className="input" value={fields.version} onChange={event => update('version', event.target.value)} placeholder="2023-06-01" maxLength={10}/></label>{invalidVersion && <p className="field-note error-text">{t("API 版本须为 YYYY-MM-DD 格式。")}</p>}</>}
+        {!local && <>
+        <div className="two-cols">
+          <label className="field">{t("输入价格（USD / 百万 token）")}<input className="input" inputMode="decimal" value={fields.inputPrice} onChange={event => update('inputPrice', event.target.value)}/></label>
+          <label className="field">{t("缓存输入价格（USD / 百万 token）")}<input className="input" inputMode="decimal" value={fields.cachedPrice} onChange={event => update('cachedPrice', event.target.value)}/></label>
+          <label className="field">{t("输出价格（USD / 百万 token）")}<input className="input" inputMode="decimal" value={fields.outputPrice} onChange={event => update('outputPrice', event.target.value)}/></label>
+        </div>
+        <label className="check"><input type="checkbox" checked={fields.includesReasoning} onChange={event => update('includesReasoning', event.target.checked)}/>{t("我已核对输出费率适用于推理 token（如有）；费用按合并后的输出用量计算。")}</label></>}
+        <div className="two-cols">
+          <label className="field">{t("单次输入 token 上限")}<input className="input" inputMode="numeric" value={fields.inputTokens} onChange={event => update('inputTokens', event.target.value)}/></label>
+          <label className="field">{t("单次输出 token 上限")}<input className="input" inputMode="numeric" value={fields.outputTokens} onChange={event => update('outputTokens', event.target.value)}/></label>
+          <label className="field">{t("单个翻译单元字符上限")}<input className="input" inputMode="numeric" value={fields.unitCharacters} onChange={event => update('unitCharacters', event.target.value)}/></label>
+        </div>
+        <div className="stack"><button className="btn" type="button" onClick={() => { const limits = base.token_limits_defaults ?? defaultTokenLimits; setFields(old => ({ ...old, inputTokens: String(limits.max_input_tokens), outputTokens: String(limits.max_output_tokens), unitCharacters: String(limits.max_unit_characters) })); setNotice(''); }}>{t("重置请求限制")}</button><button className="btn" type="button" onClick={() => { const saved = fromProvider(base); setFields(old => ({ ...old, inputTokens: saved.inputTokens, outputTokens: saved.outputTokens, unitCharacters: saved.unitCharacters })); setNotice(''); }}>{t("撤销限额修改")}</button></div>
+        {(invalidPrice || invalidTokens) && <p className="field-note error-text">{t("价格须为非负数（最多六位小数）；请求限制须为范围内的整数。")}</p>}
+      </details>
+    </fieldset>
+    <ErrorNotice error={error}/>
+    {notice && <p role="status" className="notice success-notice">{t(notice)}</p>}
+    {latest && latestFields && <section className="notice" aria-label={t("配置版本比较")}><h3>{t("读取到的最新配置")}</h3><dl className="kv"><dt>{t("服务地址")}</dt><dd>{latest.endpoint || t("未填写")}</dd><dt>{t("模型 ID")}</dt><dd>{latest.model_id || t("未填写")}</dd><dt>{t("接口 / 鉴权")}</dt><dd>{latestProtocol ? t(latestProtocol.label) : t("未提供")} / {latestAuth}</dd>{latest.api_protocol === 'claude_messages' && <><dt>{t("Anthropic API 版本")}</dt><dd>{latest.api_version || t("2023-06-01（服务端默认）")}</dd></>}<dt>{t("预算与成本控制")}</dt><dd>{latestFields.costControl ? t("已启用") : t("未启用")}</dd><dt>{t("输入 / 缓存 / 输出价格")}</dt><dd>{latestFields.inputPrice || t("未填写")} / {latestFields.cachedPrice || t("未填写")} / {latestFields.outputPrice || t("未填写")}{t("USD / 百万 token")}</dd><dt>{t("输入 / 输出上限")}</dt><dd>{latestFields.inputTokens || t("未填写")} / {latestFields.outputTokens || t("未填写")} token</dd><dt>{t("单元字符上限")}</dt><dd>{latestFields.unitCharacters || t("服务端默认")}</dd><dt>{t("推理用量计费")}</dt><dd>{latestFields.includesReasoning ? t("已确认包含") : t("未确认")}</dd><dt>{t("已启用语言对")}</dt><dd>{formatList(latest.enabled_pairs?.map(pair => pair.join(' → ')) ?? []) || t("无")}</dd></dl><p>{t("比较后选择重新加载全部字段，或保留当前非密钥输入并采用最新版本。密钥需要时请重新输入。")}</p><div className="stack"><button className="btn" type="button" onClick={() => applyLatest(latest, false)}>{t("使用最新配置")}</button><button className="btn" type="button" onClick={() => applyLatest(latest, true)}>{t("保留输入并采用最新版本")}</button></div></section>}
+    <div className="stack provider-actions"><button className="btn primary" type="submit" disabled={!canSave || languagePending}>{pending ? t("正在处理配置…") : t("保存 AI 服务配置")}</button>
+      <ProviderConnection key={`${base.profile_hash}-${loadedVersion}`} provider={base} disabled={pending || languagePending || refreshRequired || !!latest} dirty={dirty} onResult={value => setBase(old => ({ ...old, connection_test: value, connection_test_has_unknown: old.connection_test_has_unknown || value.status === 'outcome_unknown' }))}/>
+      <button className="btn ghost provider-reload" type="button" disabled={pending || languagePending} onClick={refresh.request}>{t("刷新配置")}</button>
+    </div>
+    {!etagFor(base) && <p className="field-note">{t("服务端未提供配置版本，暂不能保存。请重新读取配置。")}</p>}
+    {refresh.confirmation}
+  </form>;
+}

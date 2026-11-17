@@ -1,0 +1,28 @@
+{
+  "name": "bilingual-library-web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "npm run check:i18n && tsc -b && vite build",
+    "check:i18n": "vitest run src/i18n.test.ts src/i18n-coverage.test.ts",
+    "test": "vitest run",
+    "test:browser": "playwright test --config ../../../tests/browser/playwright.config.ts"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@typescript/typescript6": "6.0.2",
+    "@vitejs/plugin-react": "6.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  }
+}
