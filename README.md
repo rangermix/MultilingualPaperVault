@@ -65,6 +65,22 @@ human review to publish or export. OCR and translation can still omit or change
 content; compare important passages, numbers, tables, and equations with the PDF.
 See [Using the library](docs/usage.md) for the complete workflow.
 
+## Screenshots
+
+Captured from a local deployment with authored sample papers and translations.
+
+### Document library
+
+![Document library with four sample papers, tags, and reading actions](docs/screenshots/library.png)
+
+### Bilingual reader
+
+![Published reader showing an English and Simplified Chinese abstract with a bilingual outline](docs/screenshots/bilingual-reader.png)
+
+### Translation editor
+
+![Translation editor showing an English source passage beside its editable Chinese translation](docs/screenshots/translation-editor.png)
+
 ## Updating
 
 Keep your existing `compose.yaml`, Compose project name, environment files, image
