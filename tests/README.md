@@ -82,10 +82,16 @@ On macOS, use the Linux test container for the locked environment and real child
 resource-limit test. Frontend unit/build checks are:
 
 ```sh
-npm --prefix src/apps/web ci
+npm --prefix src/apps/web ci --ignore-scripts
+npm --prefix src/apps/web audit --audit-level=moderate
 npm --prefix src/apps/web test
 npm --prefix src/apps/web run build
 ```
+
+The frontend tools temporarily use a pinned [Picomatch fork](https://github.com/ryotsu-kankichi/secured-picomatch/tree/3ab5a7627d480259e3d9ca67fbc14c125d374f0e)
+that patches [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf).
+Remove the npm override once the official package publishes a fix, then regenerate
+the lockfile and rerun the checks above.
 
 Interface localization is checked by `src/apps/web/src/i18n.test.ts` (locale
 resolution, complete catalogs, interpolation and display-time status/error maps)
