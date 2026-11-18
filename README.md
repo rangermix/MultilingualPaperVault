@@ -1,4 +1,4 @@
-# Paper Translation · 对照文库
+# MultilingualPaperVault · 对照文库
 
 Translate and read research papers in your own PDF library. Compare the translation
 with the original, edit passages, and save reading editions for offline use.
